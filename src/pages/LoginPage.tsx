@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
-import { Icons } from '../components/common/Icons';
 
 const PageWrapper = styled.section`
   display: flex;
@@ -10,91 +9,116 @@ const PageWrapper = styled.section`
   min-height: 100vh;
   padding: 0;
   background-color: ${props => props.theme.colors.bg};
+  overflow: hidden;
 `;
 
 const HeroSection = styled.div`
-  background: linear-gradient(160deg, #D1E6E8 0%, #E2EFE7 100%);
-  padding: 60px 24px 48px;
+  background: linear-gradient(160deg, ${props => props.theme.colors.main} 0%, ${props => props.theme.colors.sub} 60%, ${props => props.theme.colors.bg} 100%);
+  padding: 60px 32px 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-`;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
 
-const HeroIcon = styled.div`
-  margin-bottom: 20px;
-  animation: fadeIn 0.8s ease;
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -20px;
+    right: -20px;
+    height: 60px;
+    background: ${props => props.theme.colors.bg};
+    border-radius: 50%;
+  }
 `;
 
 const LogoWordmark = styled.img`
-  width: 96px;
-  margin-bottom: 12px;
+  max-width: 260px;
+  width: 100%;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: multiply;
+  filter: contrast(1.06) brightness(1.02);
+  animation: float 3.5s ease-in-out infinite;
 `;
 
 const Tagline = styled.p`
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: ${props => props.theme.colors.point};
+  opacity: 0.75;
+  text-align: center;
   line-height: 1.5;
-  opacity: 0.9;
   font-weight: 500;
 `;
 
 const FormSection = styled.div`
   flex: 1;
-  padding: 32px 24px 40px;
+  padding: 40px 24px 32px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 `;
 
 const FormTitle = styled.h2`
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   margin-bottom: 24px;
   color: ${props => props.theme.colors.text};
 `;
 
 const InputGroup = styled.div`
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
 `;
 
 const InputLabel = styled.label`
-  display: block;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: ${props => props.theme.colors.text};
-  opacity: 0.55;
-  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.textLight};
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 `;
 
 const InputRow = styled.div`
   display: flex;
   gap: 8px;
+  align-items: flex-start;
 `;
 
 const InputField = styled.input`
   flex: 1;
+  padding: 14px 16px;
   background-color: ${props => props.theme.colors.white};
   border: 1.5px solid ${props => props.theme.colors.muted};
   border-radius: ${props => props.theme.borderRadius.md};
-  padding: 14px 16px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  color: ${props => props.theme.colors.text};
   transition: ${props => props.theme.transitions.default};
+  outline: none;
 
   &:focus {
     border-color: ${props => props.theme.colors.point};
+    box-shadow: 0 0 0 3px rgba(255, 142, 158, 0.18);
   }
 `;
 
 const Btn = styled.button`
-  border-radius: ${props => props.theme.borderRadius.md};
-  font-weight: 700;
-  font-size: 0.92rem;
-  transition: ${props => props.theme.transitions.default};
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 14px 20px;
+  transition: ${props => props.theme.transitions.default};
+  letter-spacing: -0.01em;
   
   &:disabled {
     opacity: 0.5;
@@ -105,24 +129,30 @@ const Btn = styled.button`
 const MainBtn = styled(Btn)`
   background-color: ${props => props.theme.colors.main};
   color: ${props => props.theme.colors.point};
-  padding: 14px 16px;
   width: auto;
   white-space: nowrap;
+  flex-shrink: 0;
 
-  &:active {
-    opacity: 0.95;
+  &:hover {
+    background: #FFCDD9;
+    transform: translateY(-1px);
   }
 `;
 
 const PrimaryBtn = styled(Btn)`
   background-color: ${props => props.theme.colors.point};
   color: ${props => props.theme.colors.white};
-  padding: 15px;
   width: 100%;
-  box-shadow: 0 4px 12px rgba(58, 96, 115, 0.15);
+
+  &:hover {
+    background: ${props => props.theme.colors.pointDark};
+    transform: translateY(-1px);
+    box-shadow: ${props => props.theme.shadows.md};
+  }
 
   &:active {
-    transform: scale(0.99);
+    transform: translateY(0);
+    box-shadow: none;
   }
 `;
 
@@ -133,34 +163,35 @@ const OtpContainer = styled.div`
 
 const OtpRow = styled.div`
   display: flex;
-  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 20px;
+  justify-content: center;
+  margin: 8px 0 16px;
 `;
 
 const OtpInput = styled.input`
-  width: 48px;
-  height: 52px;
-  background-color: ${props => props.theme.colors.white};
-  border: 1.8px solid ${props => props.theme.colors.muted};
-  border-radius: ${props => props.theme.borderRadius.md};
+  width: 42px;
+  height: 48px;
   text-align: center;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
+  background-color: ${props => props.theme.colors.white};
+  border: 1.5px solid ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.sm};
   color: ${props => props.theme.colors.text};
+  outline: none;
   transition: ${props => props.theme.transitions.default};
 
   &:focus {
     border-color: ${props => props.theme.colors.point};
+    box-shadow: 0 0 0 3px rgba(58, 96, 115, 0.15);
   }
 `;
 
 const FooterText = styled.p`
   margin-top: auto;
   padding-top: 24px;
-  font-size: 0.75rem;
-  color: ${props => props.theme.colors.text};
-  opacity: 0.5;
+  font-size: 0.8rem;
+  color: ${props => props.theme.colors.textLight};
   text-align: center;
 `;
 
@@ -176,7 +207,6 @@ export const LoginPage: React.FC = () => {
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // If user already logged in, redirect to main
   useEffect(() => {
     if (currentUser) {
       navigate('/main');
@@ -244,7 +274,6 @@ export const LoginPage: React.FC = () => {
         setIsVerified(true);
         showToast('인증이 완료되었습니다! 🎉');
         setTimeout(() => {
-          // Initialize temp structure
           setCurrentUser({
             user_id: 'u001',
             nickname: '물꼬지기',
@@ -269,9 +298,6 @@ export const LoginPage: React.FC = () => {
   return (
     <PageWrapper>
       <HeroSection>
-        <HeroIcon id="hero-illustration">
-          {Icons.heroFish}
-        </HeroIcon>
         <LogoWordmark src="/images/logo-wordmark.png" alt="물꼬 Mulco" />
         <Tagline>
           우리 동네 이웃 물집사들과<br />
@@ -307,7 +333,7 @@ export const LoginPage: React.FC = () => {
         </InputGroup>
 
         {isOtpSent && (
-          <OtpContainer id="otp-section">
+          <OtpContainer>
             <InputGroup>
               <InputLabel>인증번호 6자리</InputLabel>
               <OtpRow>

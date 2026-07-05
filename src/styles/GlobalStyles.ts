@@ -6,72 +6,80 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Import Google Fonts and Icons */
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
-  @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+  @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,300,0,0&display=block');
 
   /* Material Symbols styling */
   .ms {
     font-family: 'Material Symbols Rounded';
     font-weight: normal;
     font-style: normal;
-    font-size: 24px;
+    font-size: 22px;
     line-height: 1;
     letter-spacing: normal;
     text-transform: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
-    -webkit-font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    user-select: none;
+    pointer-events: none;
   }
 
   :root {
-    --bg: #F9F9F7;
-    --main: #D1E6E8;
-    --sub: #E2EFE7;
-    --point: #3A6073;
-    --text: #2C2C2C;
-    --muted: #E0E0DB;
-    --white: #FFFFFF;
-    --danger: #FF4D62;
-    --radius-sm: 8px;
-    --radius-md: 12px;
+    --bg: #FDF9F7;
+    --main: #FFE5E5;
+    --sub: #EAF6EC;
+    --point: #FF8E9E;
+    --point-dark: #E57385;
+    --text: #3C3535;
+    --text-light: #8A7E7E;
+    --muted: #F3EAEA;
+    --muted-dark: #DBC5C5;
+    --white: #ffffff;
+    --danger: #FF8383;
+    --radius-sm: 10px;
+    --radius-md: 16px;
     --radius-lg: 24px;
-    --transition: all 0.25s ease;
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-    --font: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-full: 9999px;
+    --shadow-sm: 0 4px 10px rgba(255,142,158,0.06);
+    --shadow-md: 0 6px 20px rgba(255,142,158,0.12);
+    --shadow-lg: 0 10px 30px rgba(255,142,158,0.16);
+    --transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f2;
     font-family: var(--font);
+    background: var(--bg);
     color: var(--text);
+    min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    align-items: flex-start;
     overflow-x: hidden;
   }
 
   #root {
     width: 100%;
-    max-width: 430px;
+    max-width: 500px;
     min-height: 100vh;
-    background-color: var(--bg);
-    box-shadow: 0 0 32px rgba(0, 0, 0, 0.08);
+    background: var(--bg);
     position: relative;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.05);
   }
 
   input, button, textarea {
@@ -89,33 +97,32 @@ export const GlobalStyles = createGlobalStyle`
 
   /* Utility classes */
   .text-center { text-align: center; }
-  .text-muted { color: var(--muted); }
+  .text-muted { color: var(--text-light); }
   .text-point { color: var(--point); }
   .text-sm { font-size: 0.8rem; }
+  .spacer { flex: 1; }
+  .divider { height: 1px; background: var(--muted); margin: 4px 0; }
   
   /* Animations */
   @keyframes slideUp {
     from {
       transform: translateY(100%);
+      opacity: 0;
     }
     to {
       transform: translateY(0);
+      opacity: 1;
     }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
   }
 
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
-  }
-
-  @keyframes pageSlideIn {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
   }
 `;
