@@ -59,6 +59,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Synchronize neighbors' regions with current user's region
+  useEffect(() => {
+    if (currentUser?.region) {
+      setUsers(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(uid => {
+          if (uid !== currentUser.user_id) {
+            next[uid] = {
+              ...next[uid],
+              region: currentUser.region
+            };
+          }
+        });
+        return next;
+      });
+    }
+  }, [currentUser?.region]);
+
   const toggleBlockUser = (userId: string) => {
     const target = users[userId];
     if (!target) return;
