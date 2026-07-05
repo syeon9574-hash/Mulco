@@ -208,10 +208,11 @@ export const LoginPage: React.FC = () => {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    if (currentUser) {
+    const saved = localStorage.getItem('mulco_user');
+    if (saved) {
       navigate('/main');
     }
-  }, [currentUser, navigate]);
+  }, [navigate]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, '');
