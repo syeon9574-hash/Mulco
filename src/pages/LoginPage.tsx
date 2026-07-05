@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
+import { auth } from '../firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 
 const PageWrapper = styled.section`
   display: flex;
@@ -197,13 +199,15 @@ const FooterText = styled.p`
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { showToast, setCurrentUser, currentUser } = useApp();
+  const { showToast, setCurrentUser } = useApp();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -224,22 +228,48 @@ export const LoginPage: React.FC = () => {
     setPhoneNumber(value);
   };
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     const rawNumber = phoneNumber.replace(/[^0-9]/g, '');
     if (rawNumber.length < 10) {
       showToast('올바른 휴대폰 번호를 입력해 주세요.');
       return;
     }
 
+    // Convert to E.164 format (e.g. +821012345678)
+    const formattedPhoneNumber = `+82${rawNumber.substring(1)}`;
+
     setIsSending(true);
-    setTimeout(() => {
-      setIsSending(false);
+    try {
+      // Clear old recaptcha container
+      const recaptchaEl = document.getElementById('recaptcha-container');
+      if (recaptchaEl) recaptchaEl.innerHTML = '';
+
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved
+        }
+      });
+
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
+      setConfirmationResult(confirmation);
       setIsOtpSent(true);
-      showToast('인증번호: 123456 (데모)');
+      showToast('📲 인증번호가 전송되었습니다. 문자를 확인해 주세요.');
       setTimeout(() => {
         otpRefs.current[0]?.focus();
-      }, 50);
-    }, 1200);
+      }, 100);
+    } catch (error: any) {
+      console.error(error);
+      if (error.code === 'auth/invalid-phone-number') {
+        showToast('❌ 유효하지 않은 전화번호 형식입니다.');
+      } else if (error.code === 'auth/too-many-requests') {
+        showToast('❌ 단기간에 너무 많은 요청이 발생했습니다. 잠시 후 시도해 주세요.');
+      } else {
+        showToast('❌ 인증문자 발송에 실패했습니다. 파이어베이스 설정을 확인해 주세요.');
+      }
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleOtpChange = (index: number, val: string) => {
@@ -264,34 +294,38 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const otp = otpValues.join('');
-    if (otp.length !== 6) return;
+    if (otp.length !== 6 || !confirmationResult) return;
 
     setIsVerifying(true);
-    setTimeout(() => {
+    try {
+      const result = await confirmationResult.confirm(otp);
+      const user = result.user;
+
+      setIsVerified(true);
+      showToast('인증이 완료되었습니다! 🎉');
+      
+      setTimeout(() => {
+        setCurrentUser({
+          user_id: user.uid,
+          nickname: '물꼬지기',
+          phone_number: phoneNumber,
+          region: '강남구 역삼동',
+          profile_memo: '구피 덕후 3년차 🐟 치어 나눔 좋아합니다!',
+          avatar: 'images/avatar-girl.png',
+          created_at: new Date().toISOString().split('T')[0]
+        });
+        navigate('/setup');
+      }, 600);
+    } catch (error: any) {
+      console.error(error);
+      showToast('❌ 인증번호가 일치하지 않거나 만료되었습니다.');
+      setOtpValues(Array(6).fill(''));
+      otpRefs.current[0]?.focus();
+    } finally {
       setIsVerifying(false);
-      if (otp === '123456') {
-        setIsVerified(true);
-        showToast('인증이 완료되었습니다! 🎉');
-        setTimeout(() => {
-          setCurrentUser({
-            user_id: 'u001',
-            nickname: '물꼬지기',
-            phone_number: phoneNumber,
-            region: '강남구 역삼동',
-            profile_memo: '구피 덕후 3년차 🐟 치어 나눔 좋아합니다!',
-            avatar: 'images/avatar-girl.png',
-            created_at: new Date().toISOString().split('T')[0]
-          });
-          navigate('/setup');
-        }, 600);
-      } else {
-        showToast('인증번호가 일치하지 않습니다. 다시 확인해 주세요.');
-        setOtpValues(Array(6).fill(''));
-        otpRefs.current[0]?.focus();
-      }
-    }, 1000);
+    }
   };
 
   const isOtpComplete = otpValues.every(val => val.length === 1);
@@ -373,6 +407,9 @@ export const LoginPage: React.FC = () => {
           <span className="text-point" style={{ fontWeight: 600 }}>개인정보 처리방침</span>에 동의합니다.
         </FooterText>
       </FormSection>
+
+      {/* Invisible reCAPTCHA container for Firebase Phone Auth */}
+      <div id="recaptcha-container"></div>
     </PageWrapper>
   );
 };
