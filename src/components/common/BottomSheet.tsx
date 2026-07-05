@@ -9,8 +9,13 @@ interface BottomSheetProps {
 }
 
 const Overlay = styled.div<{ isOpen: boolean }>`
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
   background-color: rgba(44, 44, 44, 0.4);
   z-index: 1000;
   display: flex;
