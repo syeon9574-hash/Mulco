@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC5cpyFXkiT2JZg4r8rj6sPzgFDs97cC4c",
+  apiKey: "AIzaSyC5cpyFXkiT2JZg4r8rj6sPzgfDs97cC4c",
   authDomain: "mulco-6ffa0.firebaseapp.com",
   projectId: "mulco-6ffa0",
   storageBucket: "mulco-6ffa0.firebasestorage.app",
