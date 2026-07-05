@@ -314,7 +314,7 @@ export const LoginPage: React.FC = () => {
                 {Array(6).fill(0).map((_, i) => (
                   <OtpInput
                     key={i}
-                    ref={el => (otpRefs.current[i] = el)}
+                    ref={el => { otpRefs.current[i] = el; }}
                     maxLength={1}
                     inputMode="numeric"
                     type="text"
