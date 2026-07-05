@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="물꼬(Mulco) - 동네 이웃과 함께하는 물생활 분양·소통 커뮤니티. 구피, 수초, 용품을 제재 없이 안전하게 직거래하세요." />
+  <meta name="theme-color" content="#FF8E9E" />
+  <meta property="og:title" content="물꼬 (Mulco) - 동네 물생활 분양 커뮤니티" />
+  <meta property="og:description" content="내 동네 이웃 물집사들과 생물·용품·수초를 나눔하세요." />
+  <title>물꼬 (Mulco) - 동네 물생활 분양·소통</title>
+  <link rel="stylesheet" href="css/style.css?v=18" />
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- ================================================
+       PAGE 1: 로그인 / 가입
+       ================================================ -->
+    <section class="page login-page active" id="login-page">
+      <div class="login-hero">
+
+        <div class="app-logo">
+          <img src="images/logo-wordmark.png" alt="물꼬 Mulco" class="logo-wordmark-img" />
+        </div>
+        <p class="app-tagline">
+          우리 동네 이웃 물집사들과<br>
+          생물·용품·수초를 나눔하세요
+        </p>
+      </div>
+
+      <div class="login-form">
+        <h2>전화번호로 시작하기</h2>
+
+        <div class="input-group">
+          <label class="input-label" for="phone-input">휴대폰 번호</label>
+          <div class="input-row">
+            <input id="phone-input" class="input-field" type="tel" inputmode="numeric" maxlength="13"
+              placeholder="010-0000-0000" autocomplete="tel" />
+            <button id="send-code-btn" class="btn btn-main" style="width:auto;white-space:nowrap;padding:14px 16px;">
+              인증번호 받기
+            </button>
+          </div>
+        </div>
+
+        <!-- OTP 인증 섹션 (초기엔 숨김) -->
+        <div id="otp-section" style="display:none">
+          <div class="input-group">
+            <label class="input-label">인증번호 6자리</label>
+            <div class="otp-row">
+              <input class="otp-input" maxlength="1" inputmode="numeric" type="text" />
+              <input class="otp-input" maxlength="1" inputmode="numeric" type="text" />
+              <input class="otp-input" maxlength="1" inputmode="numeric" type="text" />
+              <input class="otp-input" maxlength="1" inputmode="numeric" type="text" />
+              <input class="otp-input" maxlength="1" inputmode="numeric" type="text" />
+              <input class="otp-input" maxlength="1" inputmode="numeric" type="text" />
+            </div>
+          </div>
+
+          <button id="verify-btn" class="btn btn-primary" disabled style="opacity:0.5">
+            인증하고 시작하기
+          </button>
+        </div>
+
+        <p class="text-sm text-muted text-center" style="margin-top:auto;padding-top:24px;">
+          가입 시 <span class="text-point" style="font-weight:600;">이용약관</span> 및
+          <span class="text-point" style="font-weight:600;">개인정보 처리방침</span>에 동의합니다.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ================================================
+       PAGE 2: 동네 & 닉네임 설정
+       ================================================ -->
+    <section class="page" id="setup-page">
+      <div style="min-height:100vh;display:flex;flex-direction:column;background:var(--bg);">
+
+        <!-- 배경 헤더 영역 -->
+        <div
+          style="background:linear-gradient(160deg,var(--main) 0%,var(--sub) 100%);padding:60px 24px 80px;text-align:center;">
+          <div style="color:var(--point);margin-bottom:16px;display:flex;justify-content:center;opacity:0.6">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+              <rect x="8" y="10" width="32" height="28" rx="4" stroke="currentColor" stroke-width="1.5" />
+              <path d="M8 18h32" stroke="currentColor" stroke-width="1.5" />
+              <path d="M16 26h4M24 26h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M16 32h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </div>
+          <h2 style="color:var(--point);font-size:1.3rem;">우리 동네를 알려주세요</h2>
+          <p style="color:var(--point);opacity:0.75;font-size:0.85rem;margin-top:8px">
+            동네 이웃들과 물생활을 나눌 수 있어요
+          </p>
+        </div>
+
+        <!-- 설정 시트 -->
+        <div class="setup-sheet"
+          style="flex:1;border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin-top:-32px;padding:28px 24px 40px;">
+
+          <!-- 단계 인디케이터 -->
+          <div class="setup-step-indicator">
+            <div class="step-dot active" id="dot-0"></div>
+            <div class="step-dot" id="dot-1"></div>
+          </div>
+
+          <!-- STEP 1: 동네 선택 -->
+          <div id="region-section">
+            <h3 style="margin-bottom:16px;font-size:1.05rem;">내 동네 선택</h3>
+
+            <button id="gps-btn" class="btn btn-outline" style="margin-bottom:14px;gap:8px;">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" />
+                <circle cx="10" cy="10" r="2.5" fill="currentColor" opacity="0.5" />
+                <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                <line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                <line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                <line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+              현재 위치로 자동 감지
+            </button>
+
+            <p class="text-sm text-muted" style="margin-bottom:12px;text-align:center">또는 직접 선택</p>
+
+            <div class="region-list" id="region-list">
+              <!-- JS로 렌더링 -->
+            </div>
+
+            <button id="region-next-btn" class="btn btn-primary" disabled style="opacity:0.5;margin-top:8px;">
+              다음
+            </button>
+          </div>
+
+          <!-- STEP 2: 닉네임 설정 & 프로필 아바타 선택 -->
+          <div id="nickname-section" style="display:none;flex-direction:column;gap:4px;">
+            <h3 style="margin-bottom:4px;font-size:1.05rem;">프로필 캐릭터 & 닉네임</h3>
+            <p class="text-sm text-muted" style="margin-bottom:14px">앱에서 사용할 귀여운 캐릭터와 이름을 선택해 주세요</p>
+
+            <!-- 프로필 아바타 선택 그리드 (성별/연령별 감성 어항 일러스트) -->
+            <div class="avatar-select-container"
+              style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin: 8px 0 18px;">
+              <div class="avatar-option selected" data-avatar="images/avatar-girl.png"
+                style="position:relative; width:56px; height:56px; border-radius:50%; background:#FFE5EC; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3.5px solid var(--point); transition:var(--transition); box-shadow:var(--shadow-sm);"
+                title="2030 여성">
+                <img src="images/avatar-girl.png"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+              </div>
+              <div class="avatar-option" data-avatar="images/avatar-boy.png"
+                style="position:relative; width:56px; height:56px; border-radius:50%; background:#E5F7FF; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3.5px solid transparent; transition:var(--transition); box-shadow:var(--shadow-sm);"
+                title="2030 남성">
+                <img src="images/avatar-boy.png"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+              </div>
+              <div class="avatar-option" data-avatar="images/avatar-woman.png"
+                style="position:relative; width:56px; height:56px; border-radius:50%; background:#E5FAF0; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3.5px solid transparent; transition:var(--transition); box-shadow:var(--shadow-sm);"
+                title="4050 여성">
+                <img src="images/avatar-woman.png"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+              </div>
+              <div class="avatar-option" data-avatar="images/avatar-man.png"
+                style="position:relative; width:56px; height:56px; border-radius:50%; background:#FFF5D1; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3.5px solid transparent; transition:var(--transition); box-shadow:var(--shadow-sm);"
+                title="4050 남성">
+                <img src="images/avatar-man.png"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+              </div>
+              <div class="avatar-option" data-avatar="images/avatar-child.png"
+                style="position:relative; width:56px; height:56px; border-radius:50%; background:#FFEAF0; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3.5px solid transparent; transition:var(--transition); box-shadow:var(--shadow-sm);"
+                title="어린이">
+                <img src="images/avatar-child.png"
+                  style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <input id="nickname-input" class="input-field" type="text" maxlength="10" placeholder="예: 구피덕후, 역삼수초러버" />
+              <div class="char-counter" id="nickname-char-counter">0 / 10</div>
+            </div>
+
+            <button id="start-btn" class="btn btn-primary" disabled style="opacity:0.5;margin-top:8px;">
+              물꼬 시작하기
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================================================
+       PAGE 3: 메인 단톡방
+       ================================================ -->
+    <section class="page" id="main-page" style="flex-direction:column;">
+
+      <header class="app-header">
+        <div class="header-logo-wrap">
+          <img src="images/logo-wordmark.png?v=1" alt="물꼬" class="header-wordmark" />
+          <!-- JavaScript(chat.js) 참조용 숨김 요소 -->
+          <span id="room-name" style="display:none;"></span>
+        </div>
+        <button class="btn-icon" onclick="openModal('menu-modal-overlay')" title="설정">
+          <span class="ms">more_horiz</span>
+        </button>
+      </header>
+
+      <!-- 탭 바 -->
+      <nav class="tab-bar" role="tablist">
+        <button class="tab-btn active" data-tab="all-chat" role="tab">💬 전체</button>
+        <button class="tab-btn" data-tab="biology" role="tab">🐟 생물 분양</button>
+        <button class="tab-btn" data-tab="goods" role="tab">🌿 용품·수초</button>
+      </nav>
+
+      <!-- 탭 콘텐츠 영역 -->
+      <div style="flex:1;position:relative;overflow:hidden;">
+
+        <!-- [전체 채팅] 탭 -->
+        <div class="tab-content" data-tab="all-chat" style="display:flex;flex-direction:column;height:100%;">
+          <div class="chat-container" id="all-chat-messages">
+            <!-- JS로 렌더링 -->
+          </div>
+
+          <!-- 광고 배너 (채팅 탭) -->
+          <div class="ad-banner">
+            <span class="ad-label">광고</span>
+            <span>물생활 전문 쇼핑몰 '아쿠아팜' — 물꼬 회원 10% 할인</span>
+          </div>
+
+          <!-- 채팅 입력창 -->
+          <div class="chat-input-bar" style="position:sticky;bottom:0;left:0;right:0;transform:none;">
+            <input id="chat-input" class="chat-input" type="text" placeholder="메시지를 입력하세요..." />
+            <button id="chat-send-btn" class="chat-send-btn" aria-label="전송"><span class="ms"
+                style="font-size:18px">send</span></button>
+          </div>
+        </div>
+
+        <!-- [생물 분양] 탭 -->
+        <div class="tab-content" data-tab="biology"
+          style="display:none;flex-direction:column;overflow-y:auto;height:100%;">
+          <div class="market-grid" id="biology-grid">
+            <!-- JS로 렌더링 -->
+          </div>
+        </div>
+
+        <!-- [용품·수초] 탭 -->
+        <div class="tab-content" data-tab="goods"
+          style="display:none;flex-direction:column;overflow-y:auto;height:100%;">
+          <div class="market-grid" id="goods-grid">
+            <!-- JS로 렌더링 -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FAB 버튼 (분양/용품 탭에서만 보임) -->
+      <button class="fab" id="fab-btn" aria-label="게시글 작성"><span class="ms" style="font-size:28px">add</span></button>
+
+    </section>
+
+
+    <!-- ================================================
+       PAGE 4: 유저 프로필
+       ================================================ -->
+    <section class="page" id="profile-page" style="flex-direction:column;overflow-y:auto;">
+
+      <!-- 헤더 -->
+      <header class="app-header">
+        <button class="back-btn" onclick="goBack()" aria-label="뒤로가기"><span class="ms"
+            style="font-size:24px">chevron_left</span></button>
+        <div class="header-title">
+          <div class="room-name">프로필</div>
+        </div>
+        <button class="btn-icon" onclick="openProfileMenu()" title="더보기"><span class="ms">more_horiz</span></button>
+      </header>
+
+      <!-- 프로필 정보 -->
+      <div class="profile-header">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <div class="profile-name" id="profile-nickname">닉네임</div>
+        <div class="profile-region" id="profile-region"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" style="vertical-align:middle;margin-right:2px">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>동네</div>
+        <p class="profile-memo" id="profile-memo"></p>
+      </div>
+
+      <!-- 후기 배지 -->
+      <div class="profile-section">
+        <div class="profile-section-title">받은 후기</div>
+        <div class="badge-grid" id="profile-badges">
+          <!-- JS로 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 분양 이력 -->
+      <div class="profile-section">
+        <div class="profile-section-title">분양 이력</div>
+        <div id="profile-items">
+          <!-- JS로 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 1:1 채팅 CTA 버튼 -->
+      <button class="chat-cta-btn" id="chat-cta-btn">
+        <span class="ms">chat</span>
+        1:1 개인 채팅하기
+      </button>
+
+      <!-- 후기 남기기 버튼 (선택) -->
+      <div style="padding:0 20px 32px;">
+        <button class="btn btn-outline" onclick="openReviewPopup(AppState.profileTarget?.user_id)">
+          후기 남기기
+        </button>
+      </div>
+
+    </section>
+
+
+    <!-- ================================================
+       PAGE 5: 1:1 DM 채팅
+       ================================================ -->
+    <section class="page" id="dm-page" style="flex-direction:column;">
+
+      <!-- DM 헤더 -->
+      <header class="dm-header">
+        <button class="back-btn" onclick="goBackFromDM()" aria-label="뒤로가기"><span class="ms"
+            style="font-size:24px">chevron_left</span></button>
+        <div class="chat-avatar" id="dm-avatar" style="margin:0 4px">?</div>
+        <div class="dm-user-info">
+          <div class="dm-user-name" id="dm-user-name">닉네임</div>
+          <div class="dm-user-region" id="dm-user-region"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+              stroke-linejoin="round" style="vertical-align:middle;margin-right:2px">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>동네</div>
+        </div>
+        <button class="btn-icon" onclick="openDMMenu()" title="더보기"><span class="ms">more_horiz</span></button>
+      </header>
+
+      <!-- DM 메시지 목록 -->
+      <div class="chat-container" id="dm-messages" style="padding-bottom:80px;">
+        <!-- JS로 렌더링 -->
+      </div>
+
+      <!-- DM 입력창 -->
+      <div class="chat-input-bar" style="position:sticky;bottom:0;left:0;right:0;transform:none;">
+        <input id="dm-input" class="chat-input" type="text" placeholder="메시지를 입력하세요..." />
+        <button id="dm-send-btn" class="chat-send-btn" aria-label="전송"><span class="ms"
+            style="font-size:18px">send</span></button>
+      </div>
+
+    </section>
+
+
+    <!-- ================================================
+       MODAL: 분양 상세
+       ================================================ -->
+    <div class="modal-overlay" id="detail-modal-overlay" onclick="handleOverlayClick(event, 'detail-modal-overlay')">
+      <div class="modal-sheet" id="detail-modal-content" onclick="event.stopPropagation()">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 게시글 작성
+       ================================================ -->
+    <div class="modal-overlay" id="post-modal-overlay" onclick="handleOverlayClick(event, 'post-modal-overlay')">
+      <div class="modal-sheet" id="post-modal-content" onclick="event.stopPropagation()">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 후기 팝업
+       ================================================ -->
+    <div class="modal-overlay" id="review-modal-overlay" onclick="handleOverlayClick(event, 'review-modal-overlay')">
+      <div class="modal-sheet" id="review-modal-content" onclick="event.stopPropagation()">
+        <!-- JS로 렌더링 -->
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 메인 메뉴 바텀 시트
+       ================================================ -->
+    <div class="modal-overlay" id="menu-modal-overlay" onclick="handleOverlayClick(event, 'menu-modal-overlay')">
+      <div class="modal-sheet" onclick="event.stopPropagation()" style="padding: 16px 20px 24px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title" style="margin-bottom:12px; font-weight:700;">더보기</div>
+        <div class="menu-list" style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn btn-outline"
+            style="justify-content:flex-start; height:50px; text-align:left; padding-left:16px;"
+            onclick="viewMyProfile()">
+            <span class="ms" style="margin-right:8px; font-size:20px;">person</span> 내 프로필 보기
+          </button>
+          <button class="btn btn-outline"
+            style="justify-content:flex-start; height:50px; text-align:left; padding-left:16px; border-color:var(--muted);"
+            onclick="logoutUser()">
+            <span class="ms" style="margin-right:8px; font-size:20px; color:var(--danger);">logout</span> 로그아웃 (자동 로그인
+            해제)
+          </button>
+          <button class="btn btn-main" style="margin-top:8px; height:46px;" onclick="closeModal('menu-modal-overlay')">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 프로필 전용 메뉴 바텀 시트
+       ================================================ -->
+    <div class="modal-overlay" id="profile-menu-modal-overlay"
+      onclick="handleOverlayClick(event, 'profile-menu-modal-overlay')">
+      <div class="modal-sheet" onclick="event.stopPropagation()" style="padding: 16px 20px 24px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="profile-menu-title" style="margin-bottom:12px; font-weight:700;">프로필 메뉴</div>
+        <div class="menu-list" id="profile-menu-list" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- JS로 동적 렌더링 (내 프로필 vs 상대방 프로필) -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 이웃 신고하기 바텀 시트
+       ================================================ -->
+    <div class="modal-overlay" id="report-modal-overlay" onclick="handleOverlayClick(event, 'report-modal-overlay')">
+      <div class="modal-sheet" onclick="event.stopPropagation()" style="padding: 16px 20px 24px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="report-title" style="margin-bottom:8px; font-weight:700; color:var(--text);">이웃
+          신고하기</div>
+        <p class="text-sm text-muted" id="report-subtitle" style="margin-bottom:16px;">신고하시는 사유를 선택해 주세요.</p>
+
+        <div class="report-form"
+          style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding-right:2px;">
+          <!-- 사유 선택 리스트 (텍스트 컬러 선명하게 보정) -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label
+              style="display:flex; align-items:center; gap:8px; padding:11px 14px; background:var(--white); border:1.5px solid var(--muted); border-radius:var(--radius-md); font-size:0.86rem; font-weight:600; color:var(--text); cursor:pointer; transition:var(--transition);">
+              <input type="radio" name="report-reason" value="업자/상업적 판매" style="accent-color:var(--point);" checked />
+              전문 업자의 상업적 판매글이에요
+            </label>
+            <label
+              style="display:flex; align-items:center; gap:8px; padding:11px 14px; background:var(--white); border:1.5px solid var(--muted); border-radius:var(--radius-md); font-size:0.86rem; font-weight:600; color:var(--text); cursor:pointer; transition:var(--transition);">
+              <input type="radio" name="report-reason" value="비매너/비속어" style="accent-color:var(--point);" /> 비속어 / 욕설 /
+              비매너 대화를 해요
+            </label>
+            <label
+              style="display:flex; align-items:center; gap:8px; padding:11px 14px; background:var(--white); border:1.5px solid var(--muted); border-radius:var(--radius-md); font-size:0.86rem; font-weight:600; color:var(--text); cursor:pointer; transition:var(--transition);">
+              <input type="radio" name="report-reason" value="생물학대/부적절" style="accent-color:var(--point);" /> 아프거나 부적절한
+              생물을 분양해요
+            </label>
+            <label
+              style="display:flex; align-items:center; gap:8px; padding:11px 14px; background:var(--white); border:1.5px solid var(--muted); border-radius:var(--radius-md); font-size:0.86rem; font-weight:600; color:var(--text); cursor:pointer; transition:var(--transition);">
+              <input type="radio" name="report-reason" value="약속파기/사기" style="accent-color:var(--point);" /> 약속 불이행 / 예약
+              파기 / 사기가 의심돼요
+            </label>
+            <label
+              style="display:flex; align-items:center; gap:8px; padding:11px 14px; background:var(--white); border:1.5px solid var(--muted); border-radius:var(--radius-md); font-size:0.86rem; font-weight:600; color:var(--text); cursor:pointer; transition:var(--transition);">
+              <input type="radio" name="report-reason" value="기타" style="accent-color:var(--point);" /> 기타 사유 (직접 입력)
+            </label>
+          </div>
+
+          <!-- 기타 사유 입력란 -->
+          <div class="input-group" style="margin-top:4px;">
+            <textarea id="report-detail" class="input-field" rows="3" placeholder="기타 사유 선택 시 상세 내용을 뚜렷하게 입력해 주세요..."
+              style="resize:none; padding:12px; font-family:var(--font); font-size:0.86rem; color:var(--text); border-color:var(--muted);"></textarea>
+          </div>
+
+          <!-- 버튼 그룹 -->
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn btn-outline"
+              style="flex:1; height:46px; font-size:0.88rem; font-weight:700; color:var(--text-light); border-color:var(--muted);"
+              onclick="closeModal('report-modal-overlay')">취소</button>
+            <button class="btn btn-main"
+              style="flex:1.5; height:46px; font-size:0.88rem; font-weight:700; color:#ffffff; background:#ff4d62; border-color:#ff4d62; box-shadow:0 4px 12px rgba(255,77,98,0.2);"
+              onclick="submitReport()">신고 접수</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 1:1 DM 대화방 전용 메뉴 바텀 시트
+       ================================================ -->
+    <div class="modal-overlay" id="dm-menu-modal-overlay" onclick="handleOverlayClick(event, 'dm-menu-modal-overlay')">
+      <div class="modal-sheet" onclick="event.stopPropagation()" style="padding: 16px 20px 24px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="dm-menu-title" style="margin-bottom:12px; font-weight:700; color:var(--text);">채팅방
+          설정</div>
+        <div class="menu-list" id="dm-menu-list" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- JS로 동적 렌더링 (차단 상태 등에 따라 동적 로드) -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================
+       MODAL: 사진 등록 방식 선택 바텀 시트
+       ================================================ -->
+    <div class="modal-overlay" id="post-image-select-overlay"
+      onclick="handleOverlayClick(event, 'post-image-select-overlay')">
+      <div class="modal-sheet" onclick="event.stopPropagation()" style="padding: 16px 20px 24px;">
+        <div class="modal-handle"></div>
+        <div class="modal-title" style="margin-bottom:12px; font-weight:700; color:var(--text);">사진 등록 방식 선택</div>
+        <div class="menu-list" style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn btn-outline"
+            style="justify-content:flex-start; height:50px; text-align:left; padding-left:16px;"
+            onclick="closeModal('post-image-select-overlay'); triggerPostImageSource('gallery');">
+            <span class="ms" style="margin-right:8px; font-size:20px; color:var(--point);">photo_library</span> 🖼️
+            갤러리에서 선택하기
+          </button>
+          <button class="btn btn-outline"
+            style="justify-content:flex-start; height:50px; text-align:left; padding-left:16px; border-color:var(--muted);"
+            onclick="closeModal('post-image-select-overlay'); triggerPostImageSource('camera');">
+            <span class="ms" style="margin-right:8px; font-size:20px; color:var(--point);">photo_camera</span> 📸 직접
+            카메라로 촬영하기
+          </button>
+          <button class="btn btn-main" style="margin-top:8px; height:46px;"
+            onclick="closeModal('post-image-select-overlay')">
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+
+  <!-- ─── Scripts ─── -->
+  <script src="js/data.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/components/login.js"></script>
+  <script src="js/components/setup.js"></script>
+  <script src="js/components/chat.js"></script>
+  <script src="js/components/profile.js"></script>
+
+  <script>
+    // 히어로 SVG 주입 (icons.js 로드 후)
+    const heroEl = document.getElementById('hero-illustration');
+    if (heroEl && typeof Icons !== 'undefined') heroEl.innerHTML = Icons.heroFish;
+
+    // 모달 오버레이 클릭으로 닫기
+    function handleOverlayClick(e, id) {
+      if (e.target === e.currentTarget) closeModal(id);
+    }
+
+    // FAB 탭별 표시 제어
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        const fab = document.getElementById('fab-btn');
+        if (fab) fab.style.display = (tab === 'biology' || tab === 'goods') ? 'flex' : 'none';
+      });
+    });
+  </script>
+
+</body>
+
+</html>
