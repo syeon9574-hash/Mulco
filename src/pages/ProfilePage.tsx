@@ -215,6 +215,20 @@ const ReportLabel = styled.label`
   margin-bottom: 8px;
 `;
 
+const ModalTextarea = styled.textarea`
+  background-color: ${props => props.theme.colors.white};
+  border: 1.5px solid ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  resize: none;
+  width: 100%;
+
+  &:focus {
+    border-color: ${props => props.theme.colors.point};
+  }
+`;
+
 const ChipContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -430,7 +444,6 @@ export const ProfilePage: React.FC = () => {
             {items.map(item => {
               const isCompleted = item.status === 'COMPLETED';
               const statusText = isCompleted ? '거래완료' : '분양중';
-              const statusColor = isCompleted ? 'var(--text-light)' : 'var(--point)';
               return (
                 <HistoryItem key={item.item_id} completed={isCompleted}>
                   <HistoryEmoji>{item.emoji}</HistoryEmoji>

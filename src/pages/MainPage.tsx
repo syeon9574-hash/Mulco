@@ -343,7 +343,6 @@ export const MainPage: React.FC = () => {
   };
 
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
-    const list = category === 'BIOLOGY' ? biologyItems : goodsItems;
     const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
     
     setter(prev => prev.map(item => {
