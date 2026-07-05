@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
-import { mockRegions } from '../data/mockData';
 
 const PageWrapper = styled.section`
   display: flex;
@@ -12,7 +11,7 @@ const PageWrapper = styled.section`
 `;
 
 const GradientHeader = styled.div`
-  background: linear-gradient(160deg, #D1E6E8 0%, #E2EFE7 100%);
+  background: linear-gradient(160deg, ${props => props.theme.colors.main} 0%, ${props => props.theme.colors.sub} 100%);
   padding: 60px 24px 80px;
   text-align: center;
 `;
@@ -93,7 +92,7 @@ const OutlineBtn = styled(Button)`
   background-color: ${props => props.theme.colors.white};
   color: ${props => props.theme.colors.text};
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 
   &:active {
     background-color: #f8f9fa;
@@ -111,12 +110,40 @@ const PrimaryBtn = styled(Button)`
   }
 `;
 
-const OrText = styled.p`
-  font-size: 0.8rem;
-  color: ${props => props.theme.colors.text};
-  opacity: 0.4;
-  text-align: center;
-  margin-bottom: 12px;
+const SearchInputRow = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  background-color: ${props => props.theme.colors.white};
+  border: 1.5px solid ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: ${props => props.theme.transitions.default};
+
+  &:focus {
+    border-color: ${props => props.theme.colors.point};
+  }
+`;
+
+const SearchBtn = styled.button`
+  background-color: ${props => props.theme.colors.main};
+  color: ${props => props.theme.colors.point};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  transition: ${props => props.theme.transitions.default};
+
+  &:active {
+    background-color: #FFCDD9;
+  }
 `;
 
 const RegionList = styled.div`
@@ -168,7 +195,7 @@ const AvatarOption = styled.div<{ selected: boolean; bg: string }>`
   cursor: pointer;
   border: 3.5px solid ${props => (props.selected ? props.theme.colors.point : 'transparent')};
   transition: ${props => props.theme.transitions.default};
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 10px rgba(255,142,158,0.06);
   overflow: hidden;
 `;
 
@@ -216,6 +243,19 @@ const InfoText = styled.p`
   margin-bottom: 14px;
 `;
 
+const PlaceholderText = styled.div`
+  text-align: center;
+  font-size: 0.85rem;
+  color: ${props => props.theme.colors.textLight};
+  padding: 40px 20px;
+  line-height: 1.6;
+  opacity: 0.8;
+  border: 1.5px dashed ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  background-color: ${props => props.theme.colors.white};
+  margin-bottom: 24px;
+`;
+
 const avatarList = [
   { path: 'images/avatar-girl.png', title: '2030 여성', bg: '#FFE5EC' },
   { path: 'images/avatar-boy.png', title: '2030 남성', bg: '#E5F7FF' },
@@ -228,13 +268,17 @@ export const SetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast, setCurrentUser, currentUser } = useApp();
   const [step, setStep] = useState(1);
-  const [regions, setRegions] = useState(mockRegions);
+  const [regions, setRegions] = useState<string[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [nickname, setNickname] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('images/avatar-girl.png');
   const [gpsStatus, setGpsStatus] = useState<string>('현재 위치로 자동 감지');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
+
+  // Search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const handleGpsLookup = () => {
     if (!navigator.geolocation) {
@@ -276,7 +320,6 @@ export const SetupPage: React.FC = () => {
           setGpsStatus(`✅ ${regionName} 감지됨`);
           setSelectedRegion(regionName);
 
-          // Add detected region to regions list if it doesn't exist
           if (!regions.includes(regionName)) {
             setRegions(prev => [regionName, ...prev]);
           }
@@ -300,6 +343,50 @@ export const SetupPage: React.FC = () => {
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      showToast('동네 이름을 입력해 주세요.');
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.trim())}&accept-language=ko&addressdetails=1&countrycodes=kr`
+      );
+      if (!response.ok) throw new Error('API failed');
+      const data = await response.json();
+
+      if (data.length === 0) {
+        showToast('검색 결과가 없어요. 다른 동네 이름으로 검색해 보세요.');
+        setRegions([]);
+        return;
+      }
+
+      const formattedList = data.map((item: any) => {
+        const addr = item.address;
+        const city = addr.city || addr.town || addr.province || addr.state || '';
+        const county = addr.county || addr.borough || addr.district || '';
+        const neighbourhood = addr.neighbourhood || addr.suburb || addr.village || '';
+        
+        const cleanCity = city.replace('특별시', '').replace('광역시', '').replace('특별자치시', '').trim();
+        const cleanCounty = county.trim();
+        const cleanNeighbourhood = neighbourhood.trim();
+
+        const parts = [cleanCity, cleanCounty, cleanNeighbourhood].filter((v, i, a) => v && a.indexOf(v) === i);
+        return parts.join(' ') || item.display_name.split(',')[0];
+      });
+
+      const uniqueList = formattedList.filter((v: string, i: number, a: string[]) => v && a.indexOf(v) === i);
+      setRegions(uniqueList);
+    } catch (err) {
+      console.error(err);
+      showToast('검색에 실패했습니다. 다시 시도해 주세요.');
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   const handleNextStep = () => {
@@ -338,7 +425,7 @@ export const SetupPage: React.FC = () => {
             <rect x="8" y="10" width="32" height="28" rx="4" stroke="currentColor" strokeWidth="1.5" />
             <path d="M8 18h32" stroke="currentColor" strokeWidth="1.5" />
             <path d="M16 26h4M24 26h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M16 32h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M16 32h12" stroke="currentColor" stroke-width="1.5" strokeLinecap="round" />
           </svg>
         </HeaderIcon>
         <HeaderTitle>우리 동네를 알려주세요</HeaderTitle>
@@ -354,6 +441,7 @@ export const SetupPage: React.FC = () => {
         {step === 1 ? (
           <div>
             <StepTitle>내 동네 선택</StepTitle>
+            
             <OutlineBtn onClick={handleGpsLookup} disabled={gpsLoading}>
               <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
                 <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
@@ -361,25 +449,46 @@ export const SetupPage: React.FC = () => {
                 <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 <line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 <line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5" strokeLinecap="round" />
               </svg>
               {gpsStatus}
             </OutlineBtn>
 
-            <OrText>또는 직접 선택</OrText>
+            <SearchInputRow>
+              <SearchInput 
+                type="text" 
+                placeholder="동네 이름으로 검색 (예: 괴정동, 역삼동)" 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
+              />
+              <SearchBtn onClick={handleSearch} disabled={searchLoading}>
+                {searchLoading ? '검색 중...' : '검색'}
+              </SearchBtn>
+            </SearchInputRow>
 
-            <RegionList>
-              {regions.map(r => (
-                <RegionItem 
-                  key={r} 
-                  selected={selectedRegion === r} 
-                  onClick={() => setSelectedRegion(r)}
-                >
-                  <span>📍</span>
-                  <span>{r}</span>
-                </RegionItem>
-              ))}
-            </RegionList>
+            {regions.length === 0 ? (
+              <PlaceholderText>
+                📍 동네 이름(예: 괴정동, 역삼동)을 위 검색창에 검색하시거나, 상단의 GPS 감지 버튼을 눌러주세요.
+              </PlaceholderText>
+            ) : (
+              <RegionList>
+                {regions.map(r => (
+                  <RegionItem 
+                    key={r} 
+                    selected={selectedRegion === r} 
+                    onClick={() => setSelectedRegion(r)}
+                  >
+                    <span>📍</span>
+                    <span>{r}</span>
+                  </RegionItem>
+                ))}
+              </RegionList>
+            )}
 
             <PrimaryBtn onClick={handleNextStep} disabled={!selectedRegion}>
               다음
