@@ -262,6 +262,32 @@ const ModalBtn = styled.button<{ selected: boolean }>`
   transition: ${props => props.theme.transitions.default};
 `;
 
+const PrimaryBtn = styled.button`
+  width: 100%;
+  padding: 14px;
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: ${props => props.theme.transitions.default};
+  background-color: ${props => props.theme.colors.point};
+  color: ${props => props.theme.colors.white};
+  box-shadow: 0 4px 12px rgba(58, 96, 115, 0.15);
+  margin-top: 8px;
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+
 const autoReplies = [
   { user_id: 'u002', content: '저도 궁금했던 내용이에요 😊' },
   { user_id: 'u003', content: '오 정보 감사해요! 도움 됩니다 🌿' },
@@ -368,15 +394,16 @@ export const MainPage: React.FC = () => {
     cameraInputRef.current?.click();
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       showToast('📸 이미지 압축 중...');
-      const base64 = await resizeAndCompressImage(file);
-      setPostImageBase64(base64);
-      showToast('📸 업로드 완료!');
+      resizeAndCompressImage(file, 800, 800, 0.7, (base64) => {
+        setPostImageBase64(base64);
+        showToast('📸 업로드 완료!');
+      });
     } catch (err) {
       console.error(err);
       showToast('❌ 이미지 처리에 실패했어요.');

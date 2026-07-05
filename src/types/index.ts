@@ -34,6 +34,7 @@ export interface MarketItem {
   price: number;
   emoji: string;
   description: string;
+  image_base64?: string;
   status: 'AVAILABLE' | 'COMPLETED';
   created_at: string;
 }
