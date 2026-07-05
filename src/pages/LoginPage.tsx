@@ -208,11 +208,10 @@ export const LoginPage: React.FC = () => {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('mulco_user');
-    if (saved) {
+    if (currentUser) {
       navigate('/main');
     }
-  }, [navigate]);
+  }, [currentUser, navigate]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/[^0-9]/g, '');
@@ -323,9 +322,9 @@ export const LoginPage: React.FC = () => {
               onChange={handlePhoneChange}
               disabled={isOtpSent || isSending}
             />
-            <MainBtn 
-              id="send-code-btn" 
-              onClick={handleSendCode} 
+            <MainBtn
+              id="send-code-btn"
+              onClick={handleSendCode}
               disabled={isSending || isOtpSent}
             >
               {isSending ? '발송 중...' : isOtpSent ? '재발송' : '인증번호 받기'}

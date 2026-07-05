@@ -298,7 +298,7 @@ export const MainPage: React.FC = () => {
   const [postImageBase64, setPostImageBase64] = useState<string | null>(null);
 
   const [chatText, setChatText] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -311,8 +311,8 @@ export const MainPage: React.FC = () => {
 
   // Scroll to bottom on messages load
   useEffect(() => {
-    if (currentTab === 'all-chat') {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (currentTab === 'all-chat' && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, currentTab]);
 
@@ -355,50 +355,58 @@ export const MainPage: React.FC = () => {
       }
       return item;
     }));
-
-    // Trigger review modal for a random user (mock behavior)
-    const otherUserIds = Object.keys(users).filter(id => id !== currentUser?.user_id);
-    const targetUserId = otherUserIds[Math.floor(Math.random() * otherUserIds.length)];
-
-    showToast('거래 상태가 완료로 변경되었습니다. 후기 팝업을 엽니다.');
-    setTimeout(() => {
-      navigate(`/profile/${targetUserId}?review=true`);
-    }, 600);
+    showToast('✓ 분양을 완료로 변경했어요.');
   };
 
-  const handleImageUpload = (file: File) => {
-    resizeAndCompressImage(file, 600, 600, 0.7, (compressedBase64) => {
-      setPostImageBase64(compressedBase64);
-    });
+  const triggerFileSelect = () => {
+    setIsPhotoOptionOpen(false);
+    fileInputRef.current?.click();
   };
 
-  const handlePostSubmit = () => {
-    if (!postTitle.trim() || !currentUser) {
-      showToast('제목을 입력해주세요');
+  const triggerCameraSelect = () => {
+    setIsPhotoOptionOpen(false);
+    cameraInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      showToast('📸 이미지 압축 중...');
+      const base64 = await resizeAndCompressImage(file);
+      setPostImageBase64(base64);
+      showToast('📸 업로드 완료!');
+    } catch (err) {
+      console.error(err);
+      showToast('❌ 이미지 처리에 실패했어요.');
+    }
+  };
+
+  const handleCreatePost = () => {
+    if (!postTitle.trim() || !postDesc.trim() || !currentUser) {
+      showToast('제목과 내용을 적어주세요.');
       return;
     }
 
-    const emojiMap = { GIVE: '🐠', TAKE: '🔍' };
+    const priceNum = postPrice.trim() ? parseInt(postPrice.replace(/[^0-9]/g, '')) : 0;
+    const category = currentTab === 'biology' ? 'BIOLOGY' : 'GOODS';
+
     const newItem: MarketItem = {
-      item_id: 'new_' + Date.now(),
+      item_id: 'item_' + Date.now(),
       user_id: currentUser.user_id,
-      category: currentTab === 'biology' ? 'BIOLOGY' : 'GOODS',
+      category,
       trade_type: postTradeType,
       title: postTitle.trim(),
-      price: parseInt(postPrice) || 0,
-      emoji: emojiMap[postTradeType],
+      price: priceNum,
+      emoji: category === 'BIOLOGY' ? (postTradeType === 'GIVE' ? '🐠' : '🔍') : '⚙️',
       description: postDesc.trim(),
+      image_base64: postImageBase64 || undefined,
       status: 'AVAILABLE',
-      created_at: new Date().toISOString().split('T')[0],
-      // image: postImageBase64 // Custom Image Support
+      created_at: new Date().toISOString().split('T')[0]
     };
 
-    // Store custom image in metadata if provided
-    if (postImageBase64) {
-      (newItem as any).image = postImageBase64;
-    }
-
-    const setter = currentTab === 'biology' ? setBiologyItems : setGoodsItems;
+    const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
     setter(prev => [newItem, ...prev]);
 
     // Reset Form & Close
@@ -445,7 +453,7 @@ export const MainPage: React.FC = () => {
       <TabWrapper>
         {/* Tab 1: Chatting */}
         <TabContent active={currentTab === 'all-chat'}>
-          <ChatContainer>
+          <ChatContainer ref={chatContainerRef}>
             <DateDivider>2026년 7월 5일</DateDivider>
             {filteredMessages.map(msg => (
               <ChatBubble 
@@ -456,7 +464,6 @@ export const MainPage: React.FC = () => {
                 onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
               />
             ))}
-            <div ref={chatEndRef} />
           </ChatContainer>
 
           <AdBanner>
@@ -529,117 +536,113 @@ export const MainPage: React.FC = () => {
       {/* Menu Drawer */}
       <BottomSheet isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} title="더보기">
         <MenuItem onClick={() => { setIsMenuOpen(false); navigate(`/profile/${currentUser?.user_id}`); }}>
-          <span className="ms" style={{ fontSize: '20px' }}>person</span> 내 프로필 보기
+          <span className="ms">person</span> 내 프로필 보기
         </MenuItem>
-        <MenuItem onClick={() => { setIsMenuOpen(false); logout(); }} style={{ borderColor: 'var(--muted)' }}>
-          <span className="ms" style={{ fontSize: '20px', color: 'var(--danger)' }}>logout</span> 로그아웃
+        <MenuItem onClick={() => { setIsMenuOpen(false); logout(); }}>
+          <span className="ms">logout</span> 로그아웃
         </MenuItem>
-        <button 
-          className="btn btn-main" 
-          style={{ marginTop: '8px', height: '46px', width: '100%', borderRadius: '12px', background: 'var(--main)', color: 'var(--point)', fontWeight: 700 }} 
-          onClick={() => setIsMenuOpen(false)}
-        >
-          닫기
-        </button>
       </BottomSheet>
 
-      {/* Write Post Modal */}
+      {/* Write Post BottomSheet */}
       <BottomSheet 
         isOpen={isPostModalOpen} 
-        onClose={() => setIsPostModalOpen(false)}
-        title={currentTab === 'biology' ? '✍️ 생물 분양 등록하기' : '✍️ 용품·수초 등록하기'}
+        onClose={() => setIsPostModalOpen(false)} 
+        title={currentTab === 'biology' ? '🐟 생물 분양글 올리기' : '🌿 용품/수초 글 올리기'}
       >
         <InputGroup>
-          <Label>분양 형태</Label>
+          <Label>거래 방식</Label>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <ModalBtn selected={postTradeType === 'GIVE'} onClick={() => setPostTradeType('GIVE')}>📤 보내요</ModalBtn>
-            <ModalBtn selected={postTradeType === 'TAKE'} onClick={() => setPostTradeType('TAKE')}>📥 받아요</ModalBtn>
+            <ModalBtn 
+              selected={postTradeType === 'GIVE'} 
+              onClick={() => setPostTradeType('GIVE')}
+            >
+              나눔/분양하기
+            </ModalBtn>
+            <ModalBtn 
+              selected={postTradeType === 'TAKE'} 
+              onClick={() => setPostTradeType('TAKE')}
+            >
+              찾아요/구해요
+            </ModalBtn>
           </div>
         </InputGroup>
 
         <InputGroup>
-          <Label>{currentTab === 'biology' ? '어종 / 생물명' : '품목 이름'}</Label>
+          <Label>사진 등록 (선택)</Label>
+          <ImageUploadTrigger onClick={() => setIsPhotoOptionOpen(true)}>
+            {postImageBase64 ? (
+              <img src={postImageBase64} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <>
+                <span className="ms" style={{ fontSize: '28px', marginBottom: '4px' }}>photo_camera</span>
+                <span>사진 추가하기</span>
+              </>
+            )}
+          </ImageUploadTrigger>
+        </InputGroup>
+
+        <InputGroup>
+          <Label>글 제목</Label>
           <ModalInput 
-            placeholder={currentTab === 'biology' ? '예: 구피 치어, 안시 플레코...' : '예: 외부여과기, 자바모스...'} 
+            placeholder="제목을 입력해 주세요" 
             value={postTitle}
             onChange={e => setPostTitle(e.target.value)}
           />
         </InputGroup>
 
         <InputGroup>
-          <Label>책임비 / 가격 (0원 = 나눔)</Label>
+          <Label>분양가 / 책임비 (원)</Label>
           <ModalInput 
-            type="number" 
-            placeholder="0" 
+            placeholder="무료 나눔은 비워두세요" 
+            type="text"
+            inputMode="numeric"
             value={postPrice}
-            onChange={e => setPostPrice(e.target.value)}
+            onChange={e => setPostPrice(e.target.value.replace(/[^0-9]/g, ''))}
           />
         </InputGroup>
 
         <InputGroup>
-          <Label>설명</Label>
+          <Label>상세 설명</Label>
           <ModalTextarea 
-            rows={3} 
-            placeholder="간단한 설명을 적어주세요..." 
+            rows={4} 
+            placeholder="생물의 종류, 건강 상태, 크기 및 직거래 약속 장소 등을 남겨주세요." 
             value={postDesc}
             onChange={e => setPostDesc(e.target.value)}
           />
         </InputGroup>
 
-        <InputGroup>
-          <Label>사진 등록 (선택)</Label>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            accept="image/*" 
-            style={{ display: 'none' }}
-            onChange={e => e.target.files && handleImageUpload(e.target.files[0])}
-          />
-          <input 
-            type="file" 
-            ref={cameraInputRef} 
-            accept="image/*" 
-            capture="environment" 
-            style={{ display: 'none' }}
-            onChange={e => e.target.files && handleImageUpload(e.target.files[0])}
-          />
-
-          <ImageUploadTrigger onClick={() => setIsPhotoOptionOpen(true)}>
-            {postImageBase64 ? (
-              <img src={postImageBase64} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <>
-                <span style={{ fontSize: '2rem', marginBottom: '4px' }}>📷</span>
-                <span>터치해서 사진 올리기</span>
-              </>
-            )}
-          </ImageUploadTrigger>
-        </InputGroup>
-
-        <button 
-          className="btn btn-primary" 
-          style={{ width: '100%', background: 'var(--point)', color: 'white', padding: '14px', borderRadius: '12px', fontWeight: 700 }}
-          onClick={handlePostSubmit}
-        >
-          등록하기
-        </button>
+        <PrimaryBtn onClick={handleCreatePost} style={{ marginTop: '16px' }}>
+          등록 완료
+        </PrimaryBtn>
       </BottomSheet>
 
-      {/* Photo source bottom sheet */}
-      <BottomSheet isOpen={isPhotoOptionOpen} onClose={() => setIsPhotoOptionOpen(false)} title="사진 등록 방식 선택">
-        <MenuItem onClick={() => { setIsPhotoOptionOpen(false); fileInputRef.current?.click(); }}>
-          <span className="ms" style={{ fontSize: '20px', color: 'var(--point)' }}>photo_library</span> 갤러리에서 선택하기
+      {/* Select Photo Option Sheet */}
+      <BottomSheet 
+        isOpen={isPhotoOptionOpen} 
+        onClose={() => setIsPhotoOptionOpen(false)} 
+        title="사진 추가"
+      >
+        <MenuItem onClick={triggerFileSelect}>
+          <span className="ms">image</span> 앨범에서 선택
         </MenuItem>
-        <MenuItem onClick={() => { setIsPhotoOptionOpen(false); cameraInputRef.current?.click(); }} style={{ borderColor: 'var(--muted)' }}>
-          <span className="ms" style={{ fontSize: '20px', color: 'var(--point)' }}>photo_camera</span> 직접 카메라로 촬영하기
+        <MenuItem onClick={triggerCameraSelect}>
+          <span className="ms">photo_camera</span> 카메라로 촬영
         </MenuItem>
-        <button 
-          className="btn btn-main" 
-          style={{ marginTop: '8px', height: '46px', width: '100%', borderRadius: '12px', background: 'var(--main)', color: 'var(--point)', fontWeight: 700 }} 
-          onClick={() => setIsPhotoOptionOpen(false)}
-        >
-          취소
-        </button>
+        <input 
+          ref={fileInputRef} 
+          type="file" 
+          accept="image/*" 
+          style={{ display: 'none' }} 
+          onChange={handleImageChange} 
+        />
+        <input 
+          ref={cameraInputRef} 
+          type="file" 
+          accept="image/*" 
+          capture="environment" 
+          style={{ display: 'none' }} 
+          onChange={handleImageChange} 
+        />
       </BottomSheet>
     </Container>
   );
