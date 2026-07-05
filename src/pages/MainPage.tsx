@@ -39,12 +39,16 @@ const TabBtn = styled.button<{ active: boolean }>`
   transition: ${props => props.theme.transitions.default};
 `;
 
+const TabWrapper = styled.div`
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+`;
+
 const TabContent = styled.div<{ active: boolean }>`
   display: ${props => (props.active ? 'flex' : 'none')};
   flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-  position: relative;
+  height: 100%;
 `;
 
 const ChatContainer = styled.div`
@@ -438,81 +442,83 @@ export const MainPage: React.FC = () => {
         </TabBtn>
       </TabBar>
 
-      {/* Tab 1: Chatting */}
-      <TabContent active={currentTab === 'all-chat'}>
-        <ChatContainer>
-          <DateDivider>2026년 7월 5일</DateDivider>
-          {filteredMessages.map(msg => (
-            <ChatBubble 
-              key={msg.message_id}
-              message={msg}
-              isMe={msg.user_id === currentUser?.user_id}
-              sender={users[msg.user_id] || currentUser}
-              onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
-            />
-          ))}
-          <div ref={chatEndRef} />
-        </ChatContainer>
+      <TabWrapper>
+        {/* Tab 1: Chatting */}
+        <TabContent active={currentTab === 'all-chat'}>
+          <ChatContainer>
+            <DateDivider>2026년 7월 5일</DateDivider>
+            {filteredMessages.map(msg => (
+              <ChatBubble 
+                key={msg.message_id}
+                message={msg}
+                isMe={msg.user_id === currentUser?.user_id}
+                sender={users[msg.user_id] || currentUser}
+                onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
+              />
+            ))}
+            <div ref={chatEndRef} />
+          </ChatContainer>
 
-        <AdBanner>
-          <AdLabel>광고</AdLabel>
-          <span>물생활 전문 쇼핑몰 '아쿠아팜' — 물꼬 회원 10% 할인</span>
-        </AdBanner>
+          <AdBanner>
+            <AdLabel>광고</AdLabel>
+            <span>물생활 전문 쇼핑몰 '아쿠아팜' — 물꼬 회원 10% 할인</span>
+          </AdBanner>
 
-        <ChatInputBar>
-          <ChatInput 
-            placeholder="메시지를 입력하세요..." 
-            value={chatText}
-            onChange={e => setChatText(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                handleSendMessage();
-              }
-            }}
-          />
-          <SendBtn onClick={handleSendMessage} aria-label="전송">
-            <span className="ms" style={{ fontSize: '18px' }}>send</span>
-          </SendBtn>
-        </ChatInputBar>
-      </TabContent>
-
-      {/* Tab 2: Biology Market */}
-      <TabContent active={currentTab === 'biology'}>
-        <MarketGrid>
-          {filteredBiology.map(item => (
-            <MarketCard 
-              key={item.item_id}
-              item={item}
-              seller={users[item.user_id] || currentUser}
-              isMine={item.user_id === currentUser?.user_id}
-              onCompleteClick={(e) => {
-                e.stopPropagation();
-                handleCompleteItem(item.item_id, 'BIOLOGY');
+          <ChatInputBar>
+            <ChatInput 
+              placeholder="메시지를 입력하세요..." 
+              value={chatText}
+              onChange={e => setChatText(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  handleSendMessage();
+                }
               }}
-              onCardClick={() => navigate(`/profile/${item.user_id}`)}
             />
-          ))}
-        </MarketGrid>
-      </TabContent>
+            <SendBtn onClick={handleSendMessage} aria-label="전송">
+              <span className="ms" style={{ fontSize: '18px' }}>send</span>
+            </SendBtn>
+          </ChatInputBar>
+        </TabContent>
 
-      {/* Tab 3: Goods Market */}
-      <TabContent active={currentTab === 'goods'}>
-        <MarketGrid>
-          {filteredGoods.map(item => (
-            <MarketCard 
-              key={item.item_id}
-              item={item}
-              seller={users[item.user_id] || currentUser}
-              isMine={item.user_id === currentUser?.user_id}
-              onCompleteClick={(e) => {
-                e.stopPropagation();
-                handleCompleteItem(item.item_id, 'GOODS');
-              }}
-              onCardClick={() => navigate(`/profile/${item.user_id}`)}
-            />
-          ))}
-        </MarketGrid>
-      </TabContent>
+        {/* Tab 2: Biology Market */}
+        <TabContent active={currentTab === 'biology'}>
+          <MarketGrid>
+            {filteredBiology.map(item => (
+              <MarketCard 
+                key={item.item_id}
+                item={item}
+                seller={users[item.user_id] || currentUser}
+                isMine={item.user_id === currentUser?.user_id}
+                onCompleteClick={(e) => {
+                  e.stopPropagation();
+                  handleCompleteItem(item.item_id, 'BIOLOGY');
+                }}
+                onCardClick={() => navigate(`/profile/${item.user_id}`)}
+              />
+            ))}
+          </MarketGrid>
+        </TabContent>
+
+        {/* Tab 3: Goods Market */}
+        <TabContent active={currentTab === 'goods'}>
+          <MarketGrid>
+            {filteredGoods.map(item => (
+              <MarketCard 
+                key={item.item_id}
+                item={item}
+                seller={users[item.user_id] || currentUser}
+                isMine={item.user_id === currentUser?.user_id}
+                onCompleteClick={(e) => {
+                  e.stopPropagation();
+                  handleCompleteItem(item.item_id, 'GOODS');
+                }}
+                onCardClick={() => navigate(`/profile/${item.user_id}`)}
+              />
+            ))}
+          </MarketGrid>
+        </TabContent>
+      </TabWrapper>
 
       {currentTab !== 'all-chat' && (
         <Fab onClick={() => setIsPostModalOpen(true)} aria-label="게시글 작성">
