@@ -5,86 +5,80 @@ import { useApp } from '../context/AppContext';
 import { Header } from '../components/common/Header';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { formatPrice } from '../utils/format';
-import { reviewKeywords } from '../data/mockData';
+import { User } from '../types';
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
+  min-height: 100vh;
   background-color: ${props => props.theme.colors.bg};
-  padding-bottom: 90px;
+  padding-bottom: 40px;
 `;
 
 const ProfileHeader = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 24px 24px;
-  background-color: ${props => props.theme.colors.white};
-  border-bottom: 1px solid ${props => props.theme.colors.muted};
-  text-align: center;
+  padding: 36px 24px 24px;
+  gap: 10px;
+  border-bottom: 1.5px solid ${props => props.theme.colors.muted};
 `;
 
-const ProfileAvatar = styled.div<{ bg: string }>`
-  width: 80px;
-  height: 80px;
+const ProfileAvatar = styled.div<{ bg?: string }>`
+  width: 76px;
+  height: 76px;
   border-radius: ${props => props.theme.borderRadius.circle};
-  background: ${props => props.bg};
-  margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: ${props => props.theme.colors.text};
-  overflow: hidden;
+  color: ${props => props.theme.colors.point};
+  background: ${props => props.bg || 'var(--main)'};
   box-shadow: ${props => props.theme.shadows.md};
+  overflow: hidden;
 `;
 
 const AvatarImage = styled.img`
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  mix-blend-mode: multiply;
-  filter: contrast(1.05);
+  object-fit: cover;
+  border-radius: 50%;
 `;
 
-const ProfileName = styled.div`
-  font-size: 1.25rem;
+const ProfileName = styled.h2`
+  font-size: 1.2rem;
   font-weight: 700;
   color: ${props => props.theme.colors.text};
-  margin-bottom: 6px;
 `;
 
 const ProfileRegion = styled.div`
   font-size: 0.8rem;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-  opacity: 0.6;
+  color: ${props => props.theme.colors.textLight};
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-bottom: 14px;
+  gap: 4px;
 `;
 
 const ProfileMemo = styled.p`
-  font-size: 0.86rem;
-  line-height: 1.45;
-  color: ${props => props.theme.colors.text};
-  opacity: 0.9;
-  max-width: 85%;
+  font-size: 0.88rem;
+  color: ${props => props.theme.colors.textLight};
+  text-align: center;
+  line-height: 1.5;
+  max-width: 280px;
 `;
 
-const ProfileSection = styled.div`
-  padding: 24px 20px 0;
+const ProfileSection = styled.section`
+  padding: 16px 20px;
+  border-bottom: 1.5px solid ${props => props.theme.colors.muted};
 `;
 
-const SectionTitle = styled.div`
-  font-size: 0.9rem;
+const SectionTitle = styled.h3`
+  font-size: 0.78rem;
   font-weight: 700;
-  color: ${props => props.theme.colors.text};
-  opacity: 0.65;
+  color: ${props => props.theme.colors.textLight};
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   margin-bottom: 12px;
 `;
 
@@ -95,87 +89,94 @@ const BadgeGrid = styled.div`
 `;
 
 const Badge = styled.div`
-  background-color: ${props => props.theme.colors.sub};
-  color: #2e6a4f;
-  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
   border-radius: 9999px;
+  background-color: ${props => props.theme.colors.main};
+  color: ${props => props.theme.colors.pointDark};
   font-size: 0.78rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: ${props => props.theme.shadows.sm};
+  border: 1.5px solid transparent;
+  user-select: none;
 `;
 
 const BadgeCount = styled.span`
-  opacity: 0.7;
+  font-weight: 700;
+  opacity: 0.8;
+  font-size: 0.72rem;
 `;
 
-const HistoryItem = styled.div<{ completed: boolean }>`
+const HistoryItem = styled.div<{ completed?: boolean }>`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background-color: ${props => props.theme.colors.white};
+  border: 1.5px solid ${props => props.theme.colors.muted};
   border-radius: ${props => props.theme.borderRadius.md};
-  border: 1px solid ${props => props.theme.colors.muted};
-  opacity: ${props => (props.completed ? 0.6 : 1)};
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  box-shadow: ${props => props.theme.shadows.sm};
+  opacity: ${props => (props.completed ? 0.75 : 1)};
 `;
 
-const HistoryEmoji = styled.span`
-  font-size: 1.5rem;
+const HistoryEmoji = styled.div`
+  font-size: 2.2rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const HistoryBody = styled.div`
   flex: 1;
 `;
 
-const HistoryTitle = styled.div`
-  font-size: 0.85rem;
+const HistoryTitle = styled.h4`
+  font-size: 0.9rem;
   font-weight: 600;
   color: ${props => props.theme.colors.text};
+  margin-bottom: 3px;
 `;
 
-const HistoryMeta = styled.div<{ completed: boolean }>`
-  font-size: 0.72rem;
-  color: ${props => (props.completed ? props.theme.colors.text + '88' : props.theme.colors.point)};
-  font-weight: 600;
-  margin-top: 2px;
+const HistoryMeta = styled.div<{ completed?: boolean }>`
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: ${props => (props.completed ? props.theme.colors.textLight : props.theme.colors.point)};
 `;
 
 const CompleteBtn = styled.button`
   padding: 4px 10px;
   background-color: ${props => props.theme.colors.point};
-  color: white;
+  color: ${props => props.theme.colors.white};
   border-radius: 9999px;
   font-size: 0.68rem;
   font-weight: 700;
-  white-space: nowrap;
+  box-shadow: ${props => props.theme.shadows.sm};
+
+  &:hover {
+    background-color: ${props => props.theme.colors.pointDark};
+  }
 `;
 
 const ChatCtaBtn = styled.button`
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 390px;
-  background-color: ${props => props.theme.colors.point};
-  color: ${props => props.theme.colors.white};
-  padding: 16px;
-  border-radius: ${props => props.theme.borderRadius.md};
-  font-weight: 700;
-  font-size: 0.95rem;
+  margin: 16px 20px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: ${props => props.theme.shadows.lg};
-  z-index: 90;
-  
-  &:active {
-    transform: translateX(-50%) scale(0.99);
+  padding: 16px;
+  background-color: ${props => props.theme.colors.point};
+  color: ${props => props.theme.colors.white};
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: ${props => props.theme.shadows.md};
+
+  &:hover {
+    background-color: ${props => props.theme.colors.pointDark};
   }
 `;
 
@@ -249,12 +250,104 @@ const KeywordChip = styled.div<{ selected: boolean }>`
   transition: ${props => props.theme.transitions.default};
 `;
 
+const AvatarContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0 18px;
+`;
+
+const AvatarOption = styled.div<{ selected: boolean; bg: string }>`
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: ${props => props.bg};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 3.5px solid ${props => (props.selected ? props.theme.colors.point : 'transparent')};
+  transition: ${props => props.theme.transitions.default};
+  box-shadow: 0 4px 10px rgba(255,142,158,0.06);
+  overflow: hidden;
+`;
+
+const AvatarImageOption = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  width: 100%;
+`;
+
+const Label = styled.label`
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.6;
+`;
+
+const ModalInput = styled.input`
+  background-color: ${props => props.theme.colors.white};
+  border: 1.5px solid ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  width: 100%;
+
+  &:focus {
+    border-color: ${props => props.theme.colors.point};
+  }
+`;
+
+const PrimaryBtn = styled.button`
+  width: 100%;
+  padding: 14px;
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: ${props => props.theme.transitions.default};
+  background-color: ${props => props.theme.colors.point};
+  color: ${props => props.theme.colors.white};
+  box-shadow: 0 4px 12px rgba(58, 96, 115, 0.15);
+  margin-top: 8px;
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const avatarList = [
+  { path: 'images/avatar-girl.png', title: '2030 여성', bg: '#FFE5EC' },
+  { path: 'images/avatar-boy.png', title: '2030 남성', bg: '#E5F7FF' },
+  { path: 'images/avatar-woman.png', title: '4050 여성', bg: '#E5FAF0' },
+  { path: 'images/avatar-man.png', title: '4050 남성', bg: '#FFF5D1' },
+  { path: 'images/avatar-child.png', title: '어린이', bg: '#FFEAF0' }
+];
+
 export const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { 
     currentUser, 
+    setCurrentUser,
     users, 
     setUsers, 
     biologyItems, 
@@ -270,11 +363,17 @@ export const ProfilePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Form states
   const [reportReason, setReportReason] = useState('업자/상업적 판매');
   const [reportDetail, setReportDetail] = useState('');
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+
+  // Profile Edit states
+  const [editNickname, setEditNickname] = useState('');
+  const [editMemo, setEditMemo] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
 
   const targetUser = userId === currentUser?.user_id ? currentUser : users[userId || ''];
 
@@ -283,6 +382,15 @@ export const ProfilePage: React.FC = () => {
       navigate('/main');
     }
   }, [targetUser, navigate]);
+
+  // Sync profile edit states when targetUser changes or edit BottomSheet opens
+  useEffect(() => {
+    if (targetUser && isEditOpen) {
+      setEditNickname(targetUser.nickname);
+      setEditMemo(targetUser.profile_memo || '');
+      setEditAvatar(targetUser.avatar);
+    }
+  }, [targetUser, isEditOpen]);
 
   // Open review modal if query param review=true is set
   useEffect(() => {
@@ -344,7 +452,6 @@ export const ProfilePage: React.FC = () => {
       return;
     }
 
-    // Apply reviews to users
     setUsers(prev => {
       const target = prev[targetUser.user_id];
       if (!target) return prev;
@@ -353,7 +460,6 @@ export const ProfilePage: React.FC = () => {
       const newReviews = { ...currentReviews };
 
       selectedKeywords.forEach(kw => {
-        // Find match in reviews keys
         let matchedKey = '';
         for (const k of Object.keys(newReviews)) {
           if (kw.includes(k.replace('#', '')) || k.includes(kw.replace(/[\u{1F300}-\u{1FFFF}]|\s/gu, ''))) {
@@ -379,6 +485,32 @@ export const ProfilePage: React.FC = () => {
     setIsReviewOpen(false);
     setSelectedKeywords([]);
     showToast('✅ 후기가 등록되었습니다!');
+  };
+
+  const handleEditSubmit = () => {
+    if (editNickname.trim().length < 2) {
+      showToast('닉네임은 2자 이상 입력해 주세요.');
+      return;
+    }
+
+    const updatedUser: User = {
+      ...targetUser,
+      nickname: editNickname.trim(),
+      profile_memo: editMemo.trim(),
+      avatar: editAvatar
+    };
+
+    setCurrentUser(updatedUser);
+    localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
+
+    // Update global users mapping so it updates in chat list too
+    setUsers(prev => ({
+      ...prev,
+      [updatedUser.user_id]: updatedUser
+    }));
+
+    setIsEditOpen(false);
+    showToast('✅ 프로필 정보가 정상 수정되었습니다.');
   };
 
   const sortedReviews = Object.entries(targetUser.reviews || {})
@@ -488,7 +620,7 @@ export const ProfilePage: React.FC = () => {
       <BottomSheet isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} title="프로필 메뉴">
         {isMe ? (
           <>
-            <MenuItem onClick={() => { setIsMenuOpen(false); showToast('프로필 편집 기능은 준비 중이에요!'); }}>
+            <MenuItem onClick={() => { setIsMenuOpen(false); setIsEditOpen(true); }}>
               <span className="ms" style={{ fontSize: '20px' }}>edit</span> 프로필 정보 수정
             </MenuItem>
             <MenuItem onClick={() => { setIsMenuOpen(false); logout(); navigate('/'); }} style={{ borderColor: 'var(--muted)' }}>
@@ -517,88 +649,112 @@ export const ProfilePage: React.FC = () => {
         </button>
       </BottomSheet>
 
-      {/* Report bottom sheet */}
-      <BottomSheet isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} title="이웃 신고하기">
-        <p className="text-sm text-muted" style={{ marginBottom: '16px' }}>신고하시는 사유를 선택해 주세요.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {[
-            '전문 업자의 상업적 판매글이에요',
-            '비속어 / 욕설 / 비매너 대화를 해요',
-            '아프거나 부적절한 생물을 분양해요',
-            '약속 불이행 / 예약 파기 / 사기가 의심돼요',
-            '기타 사유 (직접 입력)'
-          ].map((reason) => {
-            const val = reason.includes('기타') ? '기타' : reason.split(' ')[0];
-            return (
-              <ReportLabel key={reason}>
-                <input 
-                  type="radio" 
-                  name="report-reason" 
-                  checked={reportReason === val} 
-                  onChange={() => setReportReason(val)} 
-                  style={{ accentColor: 'var(--point)' }}
-                />
-                {reason}
-              </ReportLabel>
-            );
-          })}
+      {/* Profile Edit BottomSheet */}
+      <BottomSheet isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="프로필 정보 수정">
+        <InputGroup>
+          <Label>프로필 캐릭터 선택</Label>
+          <AvatarContainer>
+            {avatarList.map(avatar => (
+              <AvatarOption
+                key={avatar.path}
+                selected={editAvatar === avatar.path}
+                bg={avatar.bg}
+                title={avatar.title}
+                onClick={() => setEditAvatar(avatar.path)}
+              >
+                <AvatarImageOption src={`/${avatar.path}`} alt={avatar.title} />
+              </AvatarOption>
+            ))}
+          </AvatarContainer>
+        </InputGroup>
 
-          <ModalTextarea
-            rows={3}
-            placeholder="기타 사유 선택 시 상세 내용을 입력해 주세요..."
-            value={reportDetail}
-            onChange={e => setReportDetail(e.target.value)}
-            style={{ marginTop: '4px' }}
+        <InputGroup>
+          <Label>닉네임</Label>
+          <ModalInput 
+            type="text"
+            maxLength={10}
+            placeholder="예: 구피덕후, 역삼수초러버"
+            value={editNickname}
+            onChange={e => setEditNickname(e.target.value)}
           />
+        </InputGroup>
 
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button 
-              className="btn btn-outline" 
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid var(--muted)', fontWeight: 700 }}
-              onClick={() => setIsReportOpen(false)}
-            >
-              취소
-            </button>
-            <button 
-              className="btn btn-primary" 
-              style={{ flex: 1.5, padding: '14px', borderRadius: '12px', background: 'var(--danger)', color: 'white', fontWeight: 700 }}
-              onClick={handleReportSubmit}
-            >
-              신고 접수
-            </button>
-          </div>
+        <InputGroup style={{ marginBottom: '20px' }}>
+          <Label>소개말 / 한 줄 상태메시지</Label>
+          <ModalTextarea 
+            rows={3} 
+            placeholder="동네 이웃에게 나를 소개해 보세요." 
+            value={editMemo}
+            onChange={e => setEditMemo(e.target.value)}
+          />
+        </InputGroup>
+
+        <PrimaryBtn onClick={handleEditSubmit}>
+          수정 완료
+        </PrimaryBtn>
+      </BottomSheet>
+
+      {/* Report bottom sheet */}
+      <BottomSheet isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} title="🚨 이웃 신고하기">
+        <p className="text-sm text-muted" style={{ marginBottom: '16px' }}>
+          신고는 즉시 접수되며 물꼬 운영진이 빠르게 검토하겠습니다. 허위 신고 시 조치가 취해질 수 있습니다.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: '16px' }}>
+          {['업자/상업적 판매', '동물 학대/유기 의심', '비매너/거래 약속 파기', '전문 분양업 성격', '기타'].map(reason => (
+            <ReportLabel key={reason}>
+              <input 
+                type="radio" 
+                name="report-reason" 
+                checked={reportReason === reason}
+                onChange={() => setReportReason(reason)}
+              />
+              <span>{reason}</span>
+            </ReportLabel>
+          ))}
         </div>
+
+        {reportReason === '기타' && (
+          <InputGroup>
+            <Label>상세 신고 사유</Label>
+            <ModalTextarea 
+              rows={3} 
+              placeholder="상세 내용을 적어주세요..." 
+              value={reportDetail}
+              onChange={e => setReportDetail(e.target.value)}
+            />
+          </InputGroup>
+        )}
+
+        <PrimaryBtn onClick={handleReportSubmit}>
+          신고 접수
+        </PrimaryBtn>
       </BottomSheet>
 
       {/* Review bottom sheet */}
-      <BottomSheet isOpen={isReviewOpen} onClose={() => setIsReviewOpen(false)} title={`⭐ ${targetUser.nickname}님 후기 남기기`}>
-        <p className="text-sm text-muted text-center" style={{ marginBottom: '16px' }}>어떤 점이 좋으셨나요? (복수 선택 가능)</p>
+      <BottomSheet isOpen={isReviewOpen} onClose={() => setIsReviewOpen(false)} title="후기 남기기">
+        <p className="text-sm text-muted" style={{ marginBottom: '14px', textAlign: 'center' }}>
+          이웃과의 거래는 어떠셨나요? 칭찬 후기를 키워드로 남겨보세요.
+        </p>
+
         <ChipContainer>
-          {reviewKeywords.map((kw) => (
-            <KeywordChip 
-              key={kw} 
-              selected={selectedKeywords.includes(kw)} 
-              onClick={() => handleReviewToggle(kw)}
-            >
-              {kw}
-            </KeywordChip>
-          ))}
+          {['🐟 생물이건강해요', '📦 포장이꼼꼼해요', '💡 물생활꿀팁을공유해줘요', '⏰ 시간약속을잘지켜요', '😊 친절해요'].map(keyword => {
+            const isSelected = selectedKeywords.includes(keyword);
+            return (
+              <KeywordChip 
+                key={keyword} 
+                selected={isSelected}
+                onClick={() => handleReviewToggle(keyword)}
+              >
+                {keyword}
+              </KeywordChip>
+            );
+          })}
         </ChipContainer>
 
-        <button 
-          className="btn btn-primary" 
-          style={{ width: '100%', background: 'var(--point)', color: 'white', padding: '14px', borderRadius: '12px', fontWeight: 700 }}
-          onClick={handleReviewSubmit}
-        >
-          후기 남기기
-        </button>
-        <button 
-          className="btn btn-ghost" 
-          style={{ width: '100%', padding: '12px', color: 'var(--text)', opacity: 0.5, fontWeight: 700, marginTop: '4px' }}
-          onClick={() => setIsReviewOpen(false)}
-        >
-          건너뛰기
-        </button>
+        <PrimaryBtn onClick={handleReviewSubmit}>
+          후기 등록
+        </PrimaryBtn>
       </BottomSheet>
     </Container>
   );
