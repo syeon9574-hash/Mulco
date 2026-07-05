@@ -25,10 +25,11 @@ const Sheet = styled.div<{ isOpen: boolean }>`
   width: 100%;
   background-color: ${props => props.theme.colors.bg};
   border-radius: ${props => props.theme.borderRadius.lg} ${props => props.theme.borderRadius.lg} 0 0;
-  padding: 16px 20px 24px;
+  padding: 16px 20px 32px;
   transform: translateY(${props => (props.isOpen ? '0' : '100%')});
   transition: transform 0.28s cubic-bezier(0.1, 0.76, 0.55, 0.94);
-  max-height: 85%;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 `;
@@ -39,6 +40,7 @@ const Handle = styled.div`
   background-color: ${props => props.theme.colors.muted};
   border-radius: 999px;
   margin: 0 auto 16px;
+  flex-shrink: 0;
 `;
 
 const Title = styled.div`
@@ -46,6 +48,7 @@ const Title = styled.div`
   font-size: 1.1rem;
   color: ${props => props.theme.colors.text};
   margin-bottom: 12px;
+  flex-shrink: 0;
 `;
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title, children }) => {
