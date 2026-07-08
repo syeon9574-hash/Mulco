@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
 import { auth } from '../firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const PageWrapper = styled.section`
   display: flex;
@@ -57,7 +57,7 @@ const Tagline = styled.p`
 
 const FormSection = styled.div`
   flex: 1;
-  padding: 40px 24px 32px;
+  padding: 24px 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -66,15 +66,16 @@ const FormSection = styled.div`
 const FormTitle = styled.h2`
   font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   color: ${props => props.theme.colors.text};
+  text-align: center;
 `;
 
 const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 `;
 
 const InputLabel = styled.label`
@@ -85,14 +86,8 @@ const InputLabel = styled.label`
   text-transform: uppercase;
 `;
 
-const InputRow = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-`;
-
 const InputField = styled.input`
-  flex: 1;
+  width: 100%;
   padding: 14px 16px;
   background-color: ${props => props.theme.colors.white};
   border: 1.5px solid ${props => props.theme.colors.muted};
@@ -101,6 +96,7 @@ const InputField = styled.input`
   color: ${props => props.theme.colors.text};
   transition: ${props => props.theme.transitions.default};
   outline: none;
+  box-sizing: border-box;
 
   &:focus {
     border-color: ${props => props.theme.colors.point};
@@ -112,7 +108,7 @@ const Btn = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 10px;
   border: none;
   cursor: pointer;
   font-weight: 600;
@@ -121,6 +117,7 @@ const Btn = styled.button`
   padding: 14px 20px;
   transition: ${props => props.theme.transitions.default};
   letter-spacing: -0.01em;
+  box-sizing: border-box;
   
   &:disabled {
     opacity: 0.5;
@@ -128,64 +125,77 @@ const Btn = styled.button`
   }
 `;
 
-const MainBtn = styled(Btn)`
-  background-color: ${props => props.theme.colors.main};
-  color: ${props => props.theme.colors.point};
-  width: auto;
-  white-space: nowrap;
-  flex-shrink: 0;
-
-  &:hover {
-    background: #FFCDD9;
-    transform: translateY(-1px);
-  }
-`;
-
 const PrimaryBtn = styled(Btn)`
   background-color: ${props => props.theme.colors.point};
   color: ${props => props.theme.colors.white};
   width: 100%;
+  margin-top: 6px;
 
   &:hover {
-    background: ${props => props.theme.colors.pointDark};
+    background: ${props => props.theme.colors.pointDark || '#264252'};
     transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadows.md};
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: none;
   }
 `;
 
-const OtpContainer = styled.div`
-  margin-top: 8px;
-  animation: slideUp 0.3s ease;
-`;
-
-const OtpRow = styled.div`
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin: 8px 0 16px;
-`;
-
-const OtpInput = styled.input`
-  width: 42px;
-  height: 48px;
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 700;
+const GoogleBtn = styled(Btn)`
   background-color: ${props => props.theme.colors.white};
-  border: 1.5px solid ${props => props.theme.colors.muted};
-  border-radius: ${props => props.theme.borderRadius.sm};
   color: ${props => props.theme.colors.text};
-  outline: none;
-  transition: ${props => props.theme.transitions.default};
+  border: 1.5px solid ${props => props.theme.colors.muted};
+  width: 100%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
 
-  &:focus {
-    border-color: ${props => props.theme.colors.point};
-    box-shadow: 0 0 0 3px rgba(58, 96, 115, 0.15);
+  &:hover {
+    background: #f8f9fa;
+    border-color: #c3c3c3;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: ${props => props.theme.colors.textLight};
+  font-size: 0.8rem;
+  margin: 10px 0 20px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1.5px solid ${props => props.theme.colors.muted};
+  }
+
+  &:not(:empty)::before {
+    margin-right: .75em;
+  }
+
+  &:not(:empty)::after {
+    margin-left: .75em;
+  }
+`;
+
+const ToggleText = styled.p`
+  margin-top: 14px;
+  font-size: 0.85rem;
+  text-align: center;
+  color: ${props => props.theme.colors.textLight};
+  
+  span {
+    color: ${props => props.theme.colors.point};
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 6px;
   }
 `;
 
@@ -200,16 +210,11 @@ const FooterText = styled.p`
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast, setCurrentUser } = useApp();
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
-  const [isSending, setIsSending] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('mulco_user');
@@ -218,117 +223,93 @@ export const LoginPage: React.FC = () => {
     }
   }, [navigate]);
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length > 3 && value.length <= 7) {
-      value = value.slice(0, 3) + '-' + value.slice(3);
-    } else if (value.length > 7) {
-      value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      const userData = {
+        user_id: user.uid,
+        nickname: user.displayName || '물집사',
+        email: user.email || '',
+        region: '강남구 역삼동',
+        profile_memo: '안녕하세요! 구글 계정으로 로그인했습니다. 🐟',
+        avatar: user.photoURL || 'images/avatar-girl.png',
+        created_at: new Date().toISOString().split('T')[0]
+      };
+
+      localStorage.setItem('mulco_user', JSON.stringify(userData));
+      setCurrentUser(userData);
+
+      showToast('구글 로그인에 성공했습니다! 🐠');
+      
+      // 회원가입 단계(프로필 완성 및 동네 설정)로 이동
+      navigate('/setup');
+    } catch (error: any) {
+      console.error(error);
+      showToast('❌ 구글 로그인에 실패했습니다. 파이어베이스 콘솔에서 Google 인증 제공업체를 켰는지 확인해 주세요.');
+    } finally {
+      setIsLoading(false);
     }
-    setPhoneNumber(value);
   };
 
-  const handleSendCode = async () => {
-    const rawNumber = phoneNumber.replace(/[^0-9]/g, '');
-    if (rawNumber.length < 10) {
-      showToast('올바른 휴대폰 번호를 입력해 주세요.');
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password) {
+      showToast('이메일과 비밀번호를 모두 입력해 주세요.');
       return;
     }
 
-    // Convert to E.164 format (e.g. +821012345678)
-    const formattedPhoneNumber = `+82${rawNumber.substring(1)}`;
-
-    setIsSending(true);
+    setIsLoading(true);
     try {
-      // Clear old recaptcha container
-      const recaptchaEl = document.getElementById('recaptcha-container');
-      if (recaptchaEl) recaptchaEl.innerHTML = '';
+      let userCredential;
+      if (isSignUp) {
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        showToast('회원가입이 완료되었습니다! 🎉');
+      } else {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+        showToast('로그인에 성공했습니다! 🐠');
+      }
 
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: () => {
-          // reCAPTCHA solved
-        }
-      });
+      const user = userCredential.user;
+      
+      const userData = {
+        user_id: user.uid,
+        nickname: '물꼬지기',
+        email: email,
+        region: '강남구 역삼동',
+        profile_memo: '안녕하세요! 반갑습니다. 🐟',
+        avatar: 'images/avatar-girl.png',
+        created_at: new Date().toISOString().split('T')[0]
+      };
 
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
-      setConfirmationResult(confirmation);
-      setIsOtpSent(true);
-      showToast('📲 인증번호가 전송되었습니다. 문자를 확인해 주세요.');
-      setTimeout(() => {
-        otpRefs.current[0]?.focus();
-      }, 100);
+      localStorage.setItem('mulco_user', JSON.stringify(userData));
+      setCurrentUser(userData);
+
+      if (isSignUp) {
+        navigate('/setup');
+      } else {
+        navigate('/main');
+      }
     } catch (error: any) {
       console.error(error);
-      if (error.code === 'auth/invalid-phone-number') {
-        showToast('❌ 유효하지 않은 전화번호 형식입니다.');
-      } else if (error.code === 'auth/too-many-requests') {
-        showToast('❌ 단기간에 너무 많은 요청이 발생했습니다. 잠시 후 시도해 주세요.');
+      if (error.code === 'auth/email-already-in-use') {
+        showToast('❌ 이미 가입된 이메일 주소입니다.');
+      } else if (error.code === 'auth/invalid-email') {
+        showToast('❌ 올바르지 않은 이메일 형식입니다.');
+      } else if (error.code === 'auth/weak-password') {
+        showToast('❌ 비밀번호는 최소 6자리 이상이어야 합니다.');
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        showToast('❌ 이메일 또는 비밀번호가 일치하지 않습니다.');
       } else {
-        showToast('❌ 인증문자 발송에 실패했습니다. 파이어베이스 설정을 확인해 주세요.');
+        showToast('❌ 로그인 중 오류가 발생했습니다.');
       }
     } finally {
-      setIsSending(false);
+      setIsLoading(false);
     }
   };
-
-  const handleOtpChange = (index: number, val: string) => {
-    const numericVal = val.replace(/[^0-9]/g, '');
-    if (!numericVal && val !== '') return;
-
-    const newOtpValues = [...otpValues];
-    newOtpValues[index] = numericVal.slice(-1);
-    setOtpValues(newOtpValues);
-
-    if (numericVal && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
-      const newOtpValues = [...otpValues];
-      newOtpValues[index - 1] = '';
-      setOtpValues(newOtpValues);
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerify = async () => {
-    const otp = otpValues.join('');
-    if (otp.length !== 6 || !confirmationResult) return;
-
-    setIsVerifying(true);
-    try {
-      const result = await confirmationResult.confirm(otp);
-      const user = result.user;
-
-      setIsVerified(true);
-      showToast('인증이 완료되었습니다! 🎉');
-      
-      setTimeout(() => {
-        setCurrentUser({
-          user_id: user.uid,
-          nickname: '물꼬지기',
-          phone_number: phoneNumber,
-          region: '강남구 역삼동',
-          profile_memo: '구피 덕후 3년차 🐟 치어 나눔 좋아합니다!',
-          avatar: 'images/avatar-girl.png',
-          created_at: new Date().toISOString().split('T')[0]
-        });
-        navigate('/setup');
-      }, 600);
-    } catch (error: any) {
-      console.error(error);
-      showToast('❌ 인증번호가 일치하지 않거나 만료되었습니다.');
-      setOtpValues(Array(6).fill(''));
-      otpRefs.current[0]?.focus();
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const isOtpComplete = otpValues.every(val => val.length === 1);
 
   return (
     <PageWrapper>
@@ -341,65 +322,66 @@ export const LoginPage: React.FC = () => {
       </HeroSection>
 
       <FormSection>
-        <FormTitle>전화번호로 시작하기</FormTitle>
+        <FormTitle>시작하기</FormTitle>
 
-        <InputGroup>
-          <InputLabel htmlFor="phone-input">휴대폰 번호</InputLabel>
-          <InputRow>
-            <InputField
-              id="phone-input"
-              type="tel"
-              inputMode="numeric"
-              maxLength={13}
-              placeholder="010-0000-0000"
-              autoComplete="tel"
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              disabled={isOtpSent || isSending}
-            />
-            <MainBtn 
-              id="send-code-btn" 
-              onClick={handleSendCode} 
-              disabled={isSending || isOtpSent}
-            >
-              {isSending ? '발송 중...' : isOtpSent ? '재발송' : '인증번호 받기'}
-            </MainBtn>
-          </InputRow>
-        </InputGroup>
+        {/* Google Login Button */}
+        <GoogleBtn type="button" onClick={handleGoogleLogin} disabled={isLoading}>
+          <svg width="18" height="18" viewBox="0 0 18 18" style={{ display: 'block' }}>
+            <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7l2.86 2.22c1.67-1.54 2.63-3.8 2.63-6.55z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.86-2.22c-.79.53-1.8.85-3.1.85-2.39 0-4.41-1.61-5.14-3.78H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.86 10.67c-.18-.53-.29-1.1-.29-1.67s.11-1.14.29-1.67V5.03H.95C.35 6.22 0 7.57 0 9s.35 2.78.95 3.97l2.91-2.3z"/>
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.05C13.46.6 11.43 0 9 0 5.5 0 2.43 2.11.95 5.03l2.91 2.3c.73-2.17 2.75-3.78 5.14-3.78z"/>
+          </svg>
+          Google 계정으로 계속하기
+        </GoogleBtn>
 
-        {isOtpSent && (
-          <OtpContainer>
+        {/* Divider */}
+        <Divider>또는 이메일로 이용하기</Divider>
+
+        {/* Toggle Email Form Button */}
+        {!showEmailForm ? (
+          <PrimaryBtn type="button" onClick={() => setShowEmailForm(true)} disabled={isLoading}>
+            이메일로 계속하기
+          </PrimaryBtn>
+        ) : (
+          <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             <InputGroup>
-              <InputLabel>인증번호 6자리</InputLabel>
-              <OtpRow>
-                {Array(6).fill(0).map((_, i) => (
-                  <OtpInput
-                    key={i}
-                    ref={el => { otpRefs.current[i] = el; }}
-                    maxLength={1}
-                    inputMode="numeric"
-                    type="text"
-                    value={otpValues[i]}
-                    onChange={e => handleOtpChange(i, e.target.value)}
-                    onKeyDown={e => handleOtpKeyDown(i, e)}
-                    disabled={isVerifying || isVerified}
-                  />
-                ))}
-              </OtpRow>
+              <InputLabel htmlFor="email-input">이메일 주소</InputLabel>
+              <InputField
+                id="email-input"
+                type="email"
+                placeholder="example@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                disabled={isLoading}
+                required
+              />
             </InputGroup>
 
-            <PrimaryBtn
-              id="verify-btn"
-              disabled={!isOtpComplete || isVerifying || isVerified}
-              onClick={handleVerify}
-              style={{
-                backgroundColor: isVerified ? '#4caf7a' : undefined,
-                opacity: isOtpComplete ? 1 : 0.5
-              }}
-            >
-              {isVerified ? '✓ 인증 완료' : isVerifying ? '확인 중...' : '인증하고 시작하기'}
+            <InputGroup>
+              <InputLabel htmlFor="password-input">비밀번호</InputLabel>
+              <InputField
+                id="password-input"
+                type="password"
+                placeholder="비밀번호 입력 (6자리 이상)"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+            </InputGroup>
+
+            <PrimaryBtn type="submit" disabled={isLoading}>
+              {isLoading ? '처리 중...' : isSignUp ? '가입하고 시작하기' : '로그인하고 시작하기'}
             </PrimaryBtn>
-          </OtpContainer>
+
+            <ToggleText>
+              {isSignUp ? '이미 계정이 있으신가요?' : '처음이신가요?'}
+              <span onClick={() => { setIsSignUp(!isSignUp); setPassword(''); }}>
+                {isSignUp ? '로그인하기' : '회원가입하기'}
+              </span>
+            </ToggleText>
+          </form>
         )}
 
         <FooterText>
@@ -407,9 +389,6 @@ export const LoginPage: React.FC = () => {
           <span className="text-point" style={{ fontWeight: 600 }}>개인정보 처리방침</span>에 동의합니다.
         </FooterText>
       </FormSection>
-
-      {/* Invisible reCAPTCHA container for Firebase Phone Auth */}
-      <div id="recaptcha-container"></div>
     </PageWrapper>
   );
 };
