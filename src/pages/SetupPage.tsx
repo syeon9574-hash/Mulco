@@ -92,11 +92,20 @@ const OutlineBtn = styled(Button)`
   background-color: ${props => props.theme.colors.white};
   color: ${props => props.theme.colors.text};
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 
   &:active {
     background-color: #f8f9fa;
   }
+`;
+
+const GpsHintText = styled.p`
+  font-size: 0.76rem;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+  margin-top: -2px;
+  margin-bottom: 18px;
+  line-height: 1.45;
+  padding: 0 4px;
 `;
 
 const PrimaryBtn = styled(Button)`
@@ -302,19 +311,24 @@ export const SetupPage: React.FC = () => {
           const data = await response.json();
           
           const addr = data.address;
-          const borough = addr.borough || addr.suburb || addr.district || '';
-          const dong = addr.neighbourhood || addr.village || addr.quarter || addr.suburb || '';
+          const city = addr.city || addr.town || addr.province || addr.state || '';
+          const county = addr.county || addr.borough || addr.district || '';
+          
+          const cleanCity = city.trim();
+          const cleanCounty = county.trim();
           
           let regionName = '';
-          if (borough && dong) {
-            regionName = `${borough} ${dong}`;
-          } else if (dong) {
-            regionName = dong;
+          if (cleanCity.includes('특별시') || cleanCity.includes('광역시') || cleanCity.includes('특별자치시')) {
+            regionName = cleanCity;
+          } else if (cleanCity && cleanCounty) {
+            regionName = `${cleanCity} ${cleanCounty}`;
+          } else if (cleanCity) {
+            regionName = cleanCity;
           } else if (data.display_name) {
             const parts = data.display_name.split(',').map((p: string) => p.trim());
-            regionName = parts[2] || parts[1] || '감지된 동네';
+            regionName = parts[2] || parts[1] || '서울특별시';
           } else {
-            regionName = '강남구 역삼동';
+            regionName = '서울특별시';
           }
 
           setGpsStatus(`✅ ${regionName} 감지됨`);
@@ -328,8 +342,8 @@ export const SetupPage: React.FC = () => {
         } catch (error) {
           console.error(error);
           setGpsStatus('❌ 주소 변환 실패');
-          showToast('주소 변환에 실패했습니다. (역삼동으로 임시 설정)');
-          setSelectedRegion('강남구 역삼동');
+          showToast('주소 변환에 실패했습니다. (서울특별시로 임시 설정)');
+          setSelectedRegion('서울특별시');
         } finally {
           setGpsLoading(false);
         }
@@ -337,8 +351,8 @@ export const SetupPage: React.FC = () => {
       (error) => {
         console.error(error);
         setGpsStatus('❌ 위치 검색 실패');
-        showToast('위치 탐색을 실패했습니다. (역삼동으로 임시 설정)');
-        setSelectedRegion('강남구 역삼동');
+        showToast('위치 탐색을 실패했습니다. (서울특별시로 임시 설정)');
+        setSelectedRegion('서울특별시');
         setGpsLoading(false);
       },
       { enableHighAccuracy: true, timeout: 8000 }
@@ -360,7 +374,7 @@ export const SetupPage: React.FC = () => {
       const data = await response.json();
 
       if (data.length === 0) {
-        showToast('검색 결과가 없어요. 다른 동네 이름으로 검색해 보세요.');
+        showToast('검색 결과가 없어요. 다른 이름으로 검색해 보세요.');
         setRegions([]);
         return;
       }
@@ -369,14 +383,19 @@ export const SetupPage: React.FC = () => {
         const addr = item.address;
         const city = addr.city || addr.town || addr.province || addr.state || '';
         const county = addr.county || addr.borough || addr.district || '';
-        const neighbourhood = addr.neighbourhood || addr.suburb || addr.village || '';
         
-        const cleanCity = city.replace('특별시', '').replace('광역시', '').replace('특별자치시', '').trim();
+        const cleanCity = city.trim();
         const cleanCounty = county.trim();
-        const cleanNeighbourhood = neighbourhood.trim();
-
-        const parts = [cleanCity, cleanCounty, cleanNeighbourhood].filter((v, i, a) => v && a.indexOf(v) === i);
-        return parts.join(' ') || item.display_name.split(',')[0];
+        
+        if (cleanCity.includes('특별시') || cleanCity.includes('광역시') || cleanCity.includes('특별자치시')) {
+          return cleanCity;
+        } else if (cleanCity && cleanCounty) {
+          return `${cleanCity} ${cleanCounty}`;
+        } else if (cleanCity) {
+          return cleanCity;
+        } else {
+          return item.display_name.split(',')[0];
+        }
       });
 
       const uniqueList = formattedList.filter((v: string, i: number, a: string[]) => v && a.indexOf(v) === i);
@@ -402,7 +421,7 @@ export const SetupPage: React.FC = () => {
       ...currentUser,
       user_id: currentUser?.user_id || 'u001',
       nickname: nickname.trim(),
-      region: selectedRegion || '강남구 역삼동',
+      region: selectedRegion || '서울특별시',
       avatar: selectedAvatar,
       profile_memo: currentUser?.profile_memo || '구피 덕후 3년차 🐟 치어 나눔 좋아합니다!',
       created_at: currentUser?.created_at || new Date().toISOString().split('T')[0]
@@ -449,15 +468,19 @@ export const SetupPage: React.FC = () => {
                 <line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 <line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 <line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5" strokeLinecap="round" />
+                <line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               {gpsStatus}
             </OutlineBtn>
 
+            <GpsHintText>
+              💡 GPS 위치 감지는 보안 연결(HTTPS) 환경에서만 작동합니다. 위치가 잡히지 않는다면 아래 검색창에 직접 도시나 구를 입력해 보세요!
+            </GpsHintText>
+
             <SearchInputRow>
               <SearchInput 
                 type="text" 
-                placeholder="동네 이름으로 검색 (예: 괴정동, 역삼동)" 
+                placeholder="도시 또는 동네 검색 (예: 서울, 성남, 강남구)" 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onKeyDown={e => {
@@ -473,7 +496,7 @@ export const SetupPage: React.FC = () => {
 
             {regions.length === 0 ? (
               <PlaceholderText>
-                📍 동네 이름(예: 괴정동, 역삼동)을 위 검색창에 검색하시거나, 상단의 GPS 감지 버튼을 눌러주세요.
+                📍 도시 또는 동네 이름(예: 서울, 성남, 강남구)을 위 검색창에 검색하시거나, 상단의 GPS 감지 버튼을 눌러주세요.
               </PlaceholderText>
             ) : (
               <RegionList>
