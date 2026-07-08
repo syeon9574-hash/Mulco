@@ -445,9 +445,23 @@ export const MainPage: React.FC = () => {
     showToast('✅ 등록되었습니다!');
   };
 
-  const filteredMessages = messages.filter(msg => !blockedUsers.includes(msg.user_id));
-  const filteredBiology = biologyItems.filter(item => !blockedUsers.includes(item.user_id));
-  const filteredGoods = goodsItems.filter(item => !blockedUsers.includes(item.user_id));
+  const filteredMessages = messages.filter(msg => {
+    const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
+    const isSameRegion = msgUser ? msgUser.region === currentUser?.region : true;
+    return !blockedUsers.includes(msg.user_id) && isSameRegion;
+  });
+
+  const filteredBiology = biologyItems.filter(item => {
+    const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
+    const isSameRegion = itemUser ? itemUser.region === currentUser?.region : true;
+    return !blockedUsers.includes(item.user_id) && isSameRegion;
+  });
+
+  const filteredGoods = goodsItems.filter(item => {
+    const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
+    const isSameRegion = itemUser ? itemUser.region === currentUser?.region : true;
+    return !blockedUsers.includes(item.user_id) && isSameRegion;
+  });
 
   return (
     <Container>
