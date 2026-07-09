@@ -110,7 +110,7 @@ const ChatInputBar = styled.div`
   display: flex;
   gap: 10px;
   align-items: center;
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
@@ -154,7 +154,7 @@ const MarketGrid = styled.div`
 `;
 
 const Fab = styled.button`
-  position: fixed;
+  position: absolute;
   bottom: 80px;
   right: 20px;
   width: 56px;

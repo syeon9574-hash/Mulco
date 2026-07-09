@@ -61,7 +61,7 @@ export const GlobalStyles = createGlobalStyle`
 
   body {
     font-family: var(--font);
-    background: var(--bg);
+    background: linear-gradient(135deg, #e6f3f5 0%, #f0f7f4 50%, #e2efe7 100%);
     color: var(--text);
     min-height: 100vh;
     display: flex;
@@ -79,7 +79,7 @@ export const GlobalStyles = createGlobalStyle`
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 40px rgba(58, 96, 115, 0.08), 0 0 1px rgba(0, 0, 0, 0.1);
   }
 
   input, button, textarea {
