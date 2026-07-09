@@ -3,8 +3,6 @@ import { User, ChatRoom, ChatMessage, MarketItem, DmMessage } from '../types';
 import { 
   mockUsers, 
   mockChatMessages, 
-  mockBiologyItems, 
-  mockGoodsItems, 
   mockDmMessages 
 } from '../data/mockData';
 
@@ -42,8 +40,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<Record<string, User>>(mockUsers);
   const [messages, setMessages] = useState<ChatMessage[]>(mockChatMessages);
-  const [biologyItems, setBiologyItems] = useState<MarketItem[]>(mockBiologyItems);
-  const [goodsItems, setGoodsItems] = useState<MarketItem[]>(mockGoodsItems);
+  const [biologyItems, setBiologyItems] = useState<MarketItem[]>([]);
+  const [goodsItems, setGoodsItems] = useState<MarketItem[]>([]);
   const [dmMessages, setDmMessages] = useState<Record<string, DmMessage[]>>(mockDmMessages);
   const [blockedUsers, setBlockedUsers] = useState<string[]>(['u004']);
   const [toasts, setToasts] = useState<ToastInfo[]>([]);
