@@ -982,15 +982,15 @@ export const MainPage: React.FC = () => {
             </LobbySectionHeader>
 
             {userRegions.map((regionName, idx) => {
-              // Calculate mock counts
-              const baseCount = regionName === '서울특별시' ? 184 : (regionName.includes('성남') ? 96 : 42);
+              // Calculate actual user count registered to this region in the DB
+              const actualCount = Object.values(users).filter(u => u.region === regionName).length;
               return (
                 <RoomCard key={idx} registered onClick={() => handleEnterRoom(regionName)}>
                   <RoomDetails>
                     <RoomIcon>🏠</RoomIcon>
                     <RoomText>
                       <RoomName>{regionName} 방</RoomName>
-                      <RoomMembers>👥 접속자 {baseCount}명</RoomMembers>
+                      <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
                     </RoomText>
                   </RoomDetails>
                   <EnterArrow>입장 →</EnterArrow>
@@ -1021,6 +1021,7 @@ export const MainPage: React.FC = () => {
             <LobbySectionTitle>인기 동네방 둘러보기</LobbySectionTitle>
             {popularRooms.map((room, idx) => {
               const isRegistered = userRegions.includes(room.name);
+              const actualCount = Object.values(users).filter(u => u.region.includes(room.name) || room.name.includes(u.region)).length;
               return (
                 <RoomCard 
                   key={idx} 
@@ -1037,7 +1038,7 @@ export const MainPage: React.FC = () => {
                     <RoomIcon>{room.emoji}</RoomIcon>
                     <RoomText>
                       <RoomName>{room.name} 방</RoomName>
-                      <RoomMembers>👥 접속자 {room.count}명</RoomMembers>
+                      <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
                     </RoomText>
                   </RoomDetails>
                   {isRegistered ? (
