@@ -395,7 +395,10 @@ export const DMPage: React.FC = () => {
     return avatarBgMap[user.avatar] || 'var(--main)';
   };
 
-  const history = localDmMessages;
+  const history = localDmMessages.filter(msg => {
+    const msgUser = users[msg.user_id];
+    return msgUser?.status !== 'BANNED';
+  });
   const isBlocked = blockedUsers.includes(targetUser.user_id);
 
   return (

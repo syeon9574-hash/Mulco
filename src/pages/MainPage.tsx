@@ -908,9 +908,24 @@ export const MainPage: React.FC = () => {
     }
   };
 
-  const filteredMessages = roomMessages.filter(msg => !blockedUsers.includes(msg.user_id));
-  const filteredBiology = roomBiologyItems.filter(item => !blockedUsers.includes(item.user_id));
-  const filteredGoods = roomGoodsItems.filter(item => !blockedUsers.includes(item.user_id));
+  const filteredMessages = roomMessages.filter(msg => {
+    const isBlocked = blockedUsers.includes(msg.user_id);
+    const msgUser = users[msg.user_id];
+    const isBanned = msgUser?.status === 'BANNED';
+    return !isBlocked && !isBanned;
+  });
+  const filteredBiology = roomBiologyItems.filter(item => {
+    const isBlocked = blockedUsers.includes(item.user_id);
+    const itemUser = users[item.user_id];
+    const isBanned = itemUser?.status === 'BANNED';
+    return !isBlocked && !isBanned;
+  });
+  const filteredGoods = roomGoodsItems.filter(item => {
+    const isBlocked = blockedUsers.includes(item.user_id);
+    const itemUser = users[item.user_id];
+    const isBanned = itemUser?.status === 'BANNED';
+    return !isBlocked && !isBanned;
+  });
 
   // Render Lobby if no room is selected
   if (!selectedRoom) {

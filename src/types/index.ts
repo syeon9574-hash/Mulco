@@ -9,6 +9,8 @@ export interface User {
   avatar_letter?: string;
   avatar: string;
   reviews?: Record<string, number>;
+  status?: 'ACTIVE' | 'BANNED';
+  role?: 'user' | 'admin';
 }
 
 export interface ChatRoom {

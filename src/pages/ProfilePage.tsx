@@ -6,6 +6,8 @@ import { Header } from '../components/common/Header';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { formatPrice } from '../utils/format';
 import { User } from '../types';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -426,15 +428,61 @@ export const ProfilePage: React.FC = () => {
     showToast('거래가 완료되었습니다.');
   };
 
-  const handleReportSubmit = () => {
+  const handleReportSubmit = async () => {
     if (reportReason === '기타' && !reportDetail.trim()) {
       showToast('⚠️ 기타 상세 신고 사유를 입력해 주세요.');
       return;
     }
 
-    console.log(`[신고] 대상: ${targetUser.nickname}, 사유: ${reportReason}, 내용: ${reportDetail}`);
-    setIsReportOpen(false);
-    showToast(`🚨 ${targetUser.nickname}님에 대한 신고가 접수되었습니다.`);
+    if (!currentUser) return;
+
+    const reportData = {
+      reporter_id: currentUser.user_id,
+      reported_user_id: targetUser.user_id,
+      reason: reportReason,
+      detail: reportDetail.trim(),
+      timestamp: Date.now()
+    };
+
+    try {
+      await addDoc(collection(db, 'reports'), reportData);
+
+      // Check unique reports
+      const q = query(
+        collection(db, 'reports'),
+        where('reported_user_id', '==', targetUser.user_id)
+      );
+      const snapshot = await getDocs(q);
+      const reporters = new Set();
+      snapshot.forEach(doc => {
+        reporters.add(doc.data().reporter_id);
+      });
+
+      if (reporters.size >= 5) {
+        const userRef = doc(db, 'users', targetUser.user_id);
+        await updateDoc(userRef, { status: 'BANNED' });
+        showToast("⚠️ 해당 사용자가 신고 누적(5회 이상)으로 인해 자동 차단되었습니다.");
+      } else {
+        showToast(`🚨 ${targetUser.nickname}님에 대한 신고가 접수되었습니다.`);
+      }
+      setIsReportOpen(false);
+      setReportDetail('');
+    } catch (err) {
+      console.error("Failed to submit report: ", err);
+      showToast("❌ 신고 처리에 실패했습니다.");
+    }
+  };
+
+  const handleAdminBanUser = async (userId: string) => {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, { status: 'BANNED' });
+      showToast("🚫 운영자 권한으로 해당 사용자를 차단했습니다.");
+    } catch (err) {
+      console.error("Failed to ban user: ", err);
+      showToast("❌ 차단 처리에 실패했습니다.");
+    }
   };
 
   const handleReviewToggle = (keyword: string) => {
@@ -638,6 +686,11 @@ export const ProfilePage: React.FC = () => {
             <MenuItem onClick={() => { setIsMenuOpen(false); setIsReportOpen(true); }} style={{ borderColor: 'var(--muted)' }}>
               <span className="ms" style={{ fontSize: '20px', color: 'var(--danger)' }}>report</span> 이웃 신고하기
             </MenuItem>
+            {currentUser?.role === 'admin' && (
+              <MenuItem onClick={() => { setIsMenuOpen(false); handleAdminBanUser(targetUser.user_id); }} style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
+                <span className="ms" style={{ fontSize: '20px', color: 'var(--danger)' }}>gavel</span> [관리자] 즉시 영구 차단
+              </MenuItem>
+            )}
           </>
         )}
         <button 
