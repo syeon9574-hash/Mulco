@@ -583,6 +583,7 @@ export const MainPage: React.FC = () => {
   const [postPrice, setPostPrice] = useState('');
   const [postDesc, setPostDesc] = useState('');
   const [postImageBase64, setPostImageBase64] = useState<string | null>(null);
+  const [postAgree, setPostAgree] = useState(false);
 
   const [chatText, setChatText] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -772,6 +773,11 @@ export const MainPage: React.FC = () => {
       return;
     }
 
+    if (!postAgree) {
+      showToast('⚠️ 생물 분양 준수사항에 동의해 주세요.');
+      return;
+    }
+
     const priceNum = postPrice.trim() ? parseInt(postPrice.replace(/[^0-9]/g, '')) : 0;
     const category = currentTab === 'biology' ? 'BIOLOGY' : 'GOODS';
 
@@ -797,6 +803,7 @@ export const MainPage: React.FC = () => {
       setPostPrice('');
       setPostDesc('');
       setPostImageBase64(null);
+      setPostAgree(false);
       setIsPostModalOpen(false);
       showToast('✅ 등록되었습니다!');
     }).catch(err => {
@@ -1239,6 +1246,37 @@ export const MainPage: React.FC = () => {
             onChange={e => setPostDesc(e.target.value)}
           />
         </InputGroup>
+
+        <div style={{
+          backgroundColor: 'var(--sub)',
+          padding: '12px',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.78rem',
+          lineHeight: '1.45',
+          color: 'var(--text)',
+          marginBottom: '16px',
+          border: '1px solid var(--muted-dark)'
+        }}>
+          <div style={{ fontWeight: '700', marginBottom: '6px', color: 'var(--point-dark)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span className="ms" style={{ fontSize: '16px' }}>gavel</span> 안전한 생물 분양 준수사항
+          </div>
+          • 개, 고양이, 햄스터 등 6대 반려동물은 관련법상 개인 거래가 금지되어 물코에서 분양할 수 없습니다. (위반 시 제재)<br />
+          • 물코는 <strong>관상어, 수초, 물생활 용품</strong> 거래만 허용합니다.<br />
+          • 개인 간의 비상업적인 거래여야 하며, 거래 시 발생한 직거래 문제에 대해 물코는 책임을 지지 않습니다.
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <input 
+            type="checkbox" 
+            id="postAgree" 
+            checked={postAgree} 
+            onChange={e => setPostAgree(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--point)' }} 
+          />
+          <label htmlFor="postAgree" style={{ fontSize: '0.84rem', fontWeight: '500', cursor: 'pointer', userSelect: 'none' }}>
+            [필수] 위의 생물 분양 준수사항을 확인했으며 동의합니다.
+          </label>
+        </div>
 
         <PrimaryBtn onClick={handleCreatePost} style={{ marginTop: '16px' }}>
           등록 완료
