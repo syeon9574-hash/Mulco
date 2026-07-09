@@ -477,10 +477,14 @@ export const ProfilePage: React.FC = () => {
         reporters.add(doc.data().reporter_id);
       });
 
-      if (reporters.size >= 5) {
+      const totalReviews = Object.values(targetUser.reviews || {}).reduce((sum: number, count: number) => sum + count, 0);
+      const deductedAmount = Math.floor(totalReviews / 3);
+      const activeReportCount = Math.max(0, reporters.size - deductedAmount);
+
+      if (activeReportCount >= 5) {
         const userRef = doc(db, 'users', targetUser.user_id);
         await updateDoc(userRef, { status: 'BANNED' });
-        showToast("⚠️ 해당 사용자가 신고 누적(5회 이상)으로 인해 자동 차단되었습니다.");
+        showToast("⚠️ 해당 사용자가 신고 누적(매너 상쇄 후 5회 이상)으로 인해 자동 차단되었습니다.");
       } else {
         showToast(`🚨 ${targetUser.nickname}님에 대한 신고가 접수되었습니다.`);
       }
@@ -591,6 +595,11 @@ export const ProfilePage: React.FC = () => {
 
   const isBlocked = blockedUsers.includes(targetUser.user_id);
 
+  // Offset reports by positive manner reviews (3 reviews offset 1 report)
+  const totalReviews = Object.values(targetUser.reviews || {}).reduce((sum, count) => sum + count, 0);
+  const deductedAmount = Math.floor(totalReviews / 3);
+  const activeReportCount = Math.max(0, reportCount - deductedAmount);
+
   return (
     <Container>
       <Header 
@@ -615,7 +624,31 @@ export const ProfilePage: React.FC = () => {
             </span>
           )}
         </ProfileName>
-        {reportCount > 0 && (
+        
+        {/* Case 1: My Profile - Private Warning for 1+ active reports */}
+        {isMe && activeReportCount > 0 && (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: '#FFF8E6',
+            color: '#D48806',
+            fontSize: '0.74rem',
+            fontWeight: '600',
+            padding: '5px 12px',
+            borderRadius: 'var(--radius-sm)',
+            marginTop: '6px',
+            border: '1px solid #FFE58F',
+            textAlign: 'center',
+            lineHeight: '1.4'
+          }}>
+            <span className="ms" style={{ fontSize: '14px', color: '#D48806' }}>warning</span>
+            이웃에게 {activeReportCount}회의 신고를 받았습니다. 매너 후기를 모아 상쇄할 수 있습니다.
+          </div>
+        )}
+
+        {/* Case 2: Other's Profile - Public Warning Badge only for 3+ active reports */}
+        {!isMe && activeReportCount >= 3 && (
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -630,7 +663,7 @@ export const ProfilePage: React.FC = () => {
             border: '1.5px solid #FFAAAA'
           }}>
             <span className="ms" style={{ fontSize: '14px', color: '#FF4D4D' }}>warning</span>
-            신고 이력 있음 (누적 {reportCount}회)
+            신고 이력 있음 (누적 {activeReportCount}회)
           </div>
         )}
         <ProfileRegion>
