@@ -602,26 +602,186 @@ const popularRooms = [
   { name: '부산광역시', count: 82, emoji: '🌊' }
 ];
 
-// 지역명으로 대표 이모지 반환
+// 지역명으로 대표 이모지 반환 (시 단위 개별 매핑)
 const getRegionEmoji = (regionName: string): string => {
-  const name = regionName;
-  if (name.includes('서울')) return '🏙️';
-  if (name.includes('부산')) return '🌊';
-  if (name.includes('대구')) return '🍎';
-  if (name.includes('인천')) return '⚓';
-  if (name.includes('광주')) return '🌸';
-  if (name.includes('대전')) return '🌻';
-  if (name.includes('울산')) return '🏭';
-  if (name.includes('세종')) return '🏛️';
-  if (name.includes('경기') || name.includes('수원') || name.includes('성남') || name.includes('용인') || name.includes('고양') || name.includes('화성') || name.includes('안산') || name.includes('남양주') || name.includes('평택') || name.includes('의정부') || name.includes('시흥') || name.includes('파주')) return '🌾';
-  if (name.includes('강원') || name.includes('춘천') || name.includes('원주') || name.includes('강릉') || name.includes('속초')) return '🏔️';
-  if (name.includes('충북') || name.includes('청주') || name.includes('충주')) return '🌲';
-  if (name.includes('충남') || name.includes('천안') || name.includes('아산') || name.includes('공주') || name.includes('논산')) return '🌾';
-  if (name.includes('전북') || name.includes('전주') || name.includes('익산') || name.includes('군산')) return '🌻';
-  if (name.includes('전남') || name.includes('목포') || name.includes('여수') || name.includes('순천') || name.includes('광양')) return '🐚';
-  if (name.includes('경북') || name.includes('포항') || name.includes('경주') || name.includes('구미') || name.includes('안동')) return '🏯';
-  if (name.includes('경남') || name.includes('창원') || name.includes('진주') || name.includes('통영') || name.includes('거제')) return '⛵';
-  if (name.includes('제주')) return '🍊';
+  const n = regionName;
+
+  // === 특별시 / 광역시 / 특별자치시 ===
+  if (n.includes('서울')) return '🏙️';
+  if (n.includes('부산')) return '🌊';
+  if (n.includes('대구')) return '🍎';
+  if (n.includes('인천')) return '⚓';
+  if (n.includes('광주')) return '🌸';
+  if (n.includes('대전')) return '🌻';
+  if (n.includes('울산')) return '🏭';
+  if (n.includes('세종')) return '🏛️';
+  if (n.includes('제주')) return '🍊';
+
+  // === 경기도 ===
+  if (n.includes('수원')) return '🏰';      // 수원화성
+  if (n.includes('성남')) return '💻';      // 판교 테크밸리
+  if (n.includes('고양')) return '🌷';      // 고양 꽃박람회
+  if (n.includes('용인')) return '🎢';      // 에버랜드
+  if (n.includes('부천')) return '📚';      // 부천 만화박물관
+  if (n.includes('안산')) return '🌊';      // 바다·시화호
+  if (n.includes('안양')) return '🏞️';     // 안양천
+  if (n.includes('남양주')) return '🍵';   // 다산 정약용·차
+  if (n.includes('화성')) return '🚀';     // 나로우주센터·삼성반도체
+  if (n.includes('평택')) return '🛳️';    // 평택항
+  if (n.includes('의정부')) return '🍖';   // 의정부부대찌개
+  if (n.includes('시흥')) return '🦆';     // 갯골생태공원
+  if (n.includes('파주')) return '📖';     // 파주출판단지
+  if (n.includes('광명')) return '🕯️';    // 광명동굴
+  if (n.includes('하남')) return '🛍️';    // 스타필드
+  if (n.includes('김포')) return '✈️';    // 김포공항
+  if (n.includes('오산')) return '🎯';     // 오산
+  if (n.includes('이천')) return '🍚';     // 이천 쌀
+  if (n.includes('안성')) return '🎪';     // 안성 바우덕이
+  if (n.includes('포천')) return '🌲';     // 국립수목원
+  if (n.includes('여주')) return '🏺';     // 여주 도자기
+  if (n.includes('동두천')) return '🪖';   // 미군기지
+  if (n.includes('양주')) return '🌹';     // 나리공원
+  if (n.includes('구리')) return '🌉';     // 구리
+  if (n.includes('의왕')) return '🚂';     // 철도박물관
+  if (n.includes('과천')) return '🦁';     // 서울대공원
+  if (n.includes('광주') && n.includes('경기')) return '🍑';
+
+  // === 강원도 ===
+  if (n.includes('춘천')) return '🍗';     // 춘천닭갈비
+  if (n.includes('원주')) return '🎿';     // 스키
+  if (n.includes('강릉')) return '☕';     // 강릉커피거리
+  if (n.includes('동해')) return '🏖️';    // 동해바다
+  if (n.includes('태백')) return '⛏️';    // 탄광·태백산
+  if (n.includes('속초')) return '🦞';     // 대게·오징어
+  if (n.includes('삼척')) return '🏔️';    // 덕항산·환선굴
+  if (n.includes('홍천')) return '🌲';
+  if (n.includes('횡성')) return '🥩';     // 횡성 한우
+  if (n.includes('영월')) return '🪨';     // 고생대화석
+  if (n.includes('평창')) return '🎿';     // 올림픽
+  if (n.includes('정선')) return '🎰';     // 강원랜드
+  if (n.includes('철원')) return '🦢';     // 두루미
+  if (n.includes('화천')) return '🐟';     // 화천 산천어축제
+  if (n.includes('양구')) return '🎖️';
+  if (n.includes('인제')) return '🌊';     // 내린천 래프팅
+  if (n.includes('고성') && n.includes('강원')) return '🦌';
+  if (n.includes('양양')) return '🏄';     // 서핑
+
+  // === 충청북도 ===
+  if (n.includes('청주')) return '📜';     // 직지심체요절
+  if (n.includes('충주')) return '🍎';     // 충주사과
+  if (n.includes('제천')) return '🌿';     // 제천한방약초
+  if (n.includes('보은')) return '🌰';     // 보은대추
+  if (n.includes('옥천')) return '🍇';     // 옥천포도
+  if (n.includes('영동')) return '🍷';     // 영동와인
+  if (n.includes('증평')) return '🌾';
+  if (n.includes('진천')) return '🔔';     // 진천 농다리
+  if (n.includes('괴산')) return '🌶️';    // 괴산고추
+  if (n.includes('음성')) return '🍑';     // 음성 복숭아
+  if (n.includes('단양')) return '🏞️';    // 단양 8경
+
+  // === 충청남도 ===
+  if (n.includes('천안')) return '🍡';     // 천안호두과자
+  if (n.includes('공주')) return '👑';     // 백제역사
+  if (n.includes('보령')) return '🌊';     // 머드축제
+  if (n.includes('아산')) return '🌺';     // 장미꽃밭
+  if (n.includes('서산')) return '🦀';     // 서산 꽃게
+  if (n.includes('논산')) return '🍓';     // 논산딸기
+  if (n.includes('계룡')) return '⚔️';    // 군사도시
+  if (n.includes('당진')) return '🏗️';    // 당진철강
+  if (n.includes('금산')) return '🌿';     // 금산인삼
+  if (n.includes('부여')) return '🏛️';    // 백제역사
+  if (n.includes('서천')) return '🐦';     // 철새도래지
+  if (n.includes('청양')) return '🌶️';    // 청양고추
+  if (n.includes('홍성')) return '🐄';     // 홍성한우
+  if (n.includes('예산')) return '🍎';     // 예산사과
+  if (n.includes('태안')) return '🌻';     // 태안 꽃지
+  if (n.includes('당진')) return '⚓';
+
+  // === 전라북도 ===
+  if (n.includes('전주')) return '🍚';     // 전주비빔밥
+  if (n.includes('군산')) return '⚓';     // 군산항·근대문화
+  if (n.includes('익산')) return '💎';     // 보석박물관
+  if (n.includes('정읍')) return '🌻';     // 황토현
+  if (n.includes('남원')) return '💑';     // 춘향전
+  if (n.includes('김제')) return '🌾';     // 지평선 들녘
+  if (n.includes('완주')) return '🍇';
+  if (n.includes('진안')) return '🌿';     // 고원
+  if (n.includes('무주')) return '🎿';     // 무주리조트
+  if (n.includes('장수')) return '🍎';
+  if (n.includes('임실')) return '🧀';     // 임실치즈
+  if (n.includes('순창')) return '🌶️';    // 순창고추장
+  if (n.includes('고창')) return '🫐';     // 고창복분자
+  if (n.includes('부안')) return '🌊';     // 변산반도
+
+  // === 전라남도 ===
+  if (n.includes('목포')) return '🐙';     // 낙지
+  if (n.includes('여수')) return '🌅';     // 여수밤바다
+  if (n.includes('순천')) return '🌿';     // 순천만갈대밭
+  if (n.includes('나주')) return '🍐';     // 나주배
+  if (n.includes('광양')) return '🌸';     // 광양매화
+  if (n.includes('담양')) return '🎋';     // 담양대나무
+  if (n.includes('곡성')) return '🚂';     // 기차마을
+  if (n.includes('구례')) return '🌸';     // 산수유
+  if (n.includes('고흥')) return '🚀';     // 나로우주센터
+  if (n.includes('보성')) return '🍵';     // 보성녹차
+  if (n.includes('화순')) return '🪨';     // 화순 고인돌
+  if (n.includes('장흥')) return '🦑';     // 장흥키조개
+  if (n.includes('강진')) return '🏺';     // 청자
+  if (n.includes('해남')) return '🐢';     // 땅끝마을
+  if (n.includes('영암')) return '🎸';     // 영암 왕인문화
+  if (n.includes('무안')) return '✈️';    // 무안공항
+  if (n.includes('함평')) return '🦋';     // 함평나비축제
+  if (n.includes('영광')) return '🐟';     // 영광굴비
+  if (n.includes('장성')) return '🌲';     // 축령산 편백
+  if (n.includes('완도')) return '🦀';     // 완도전복
+  if (n.includes('진도')) return '🐕';     // 진도개
+  if (n.includes('신안')) return '🌊';     // 다도해
+
+  // === 경상북도 ===
+  if (n.includes('포항')) return '🏗️';    // 포스코철강
+  if (n.includes('경주')) return '🏯';     // 신라고도
+  if (n.includes('김천')) return '🍑';     // 김천자두
+  if (n.includes('안동')) return '🎭';     // 하회탈·안동찜닭
+  if (n.includes('구미')) return '📱';     // 전자산업
+  if (n.includes('영주')) return '🎋';     // 소수서원·부석사
+  if (n.includes('영천')) return '🍷';     // 영천와인
+  if (n.includes('상주')) return '🚲';     // 자전거도시
+  if (n.includes('문경')) return '🏔️';    // 문경새재
+  if (n.includes('경산')) return '🍇';     // 경산대추·포도
+  if (n.includes('군위')) return '🌾';
+  if (n.includes('의성')) return '🧅';     // 의성마늘
+  if (n.includes('청송')) return '🍎';     // 청송사과
+  if (n.includes('영양')) return '🌶️';    // 영양고추
+  if (n.includes('영덕')) return '🦞';     // 영덕대게
+  if (n.includes('청도')) return '🍷';     // 청도와인
+  if (n.includes('고령')) return '🏛️';    // 가야고분
+  if (n.includes('성주')) return '🍈';     // 성주참외
+  if (n.includes('칠곡')) return '⚙️';
+  if (n.includes('예천')) return '🎣';     // 예천곤충
+  if (n.includes('봉화')) return '🌲';     // 봉화 청량산
+  if (n.includes('울진')) return '🦞';     // 울진대게
+  if (n.includes('울릉')) return '🌊';     // 울릉도
+
+  // === 경상남도 ===
+  if (n.includes('창원')) return '⚙️';    // 기계산업
+  if (n.includes('진주')) return '💎';     // 남강유등축제
+  if (n.includes('통영')) return '⛵';     // 통영바다·이순신
+  if (n.includes('사천')) return '✈️';    // 사천항공
+  if (n.includes('김해')) return '🏛️';    // 가야역사
+  if (n.includes('밀양')) return '🎋';     // 밀양아리랑·얼음골
+  if (n.includes('거제')) return '🚢';     // 조선소
+  if (n.includes('양산')) return '🌲';     // 통도사·자연
+  if (n.includes('의령')) return '🌾';     // 의령 솥뚜껑삼겹살
+  if (n.includes('함안')) return '🌸';     // 함안연꽃
+  if (n.includes('창녕')) return '🦩';     // 우포늪 따오기
+  if (n.includes('고성') && n.includes('경남')) return '🦕'; // 공룡발자국
+  if (n.includes('남해')) return '🌿';     // 남해 다랭이논
+  if (n.includes('하동')) return '🍵';     // 하동녹차
+  if (n.includes('산청')) return '🌿';     // 산청한방
+  if (n.includes('함양')) return '🌳';     // 함양 상림공원
+  if (n.includes('거창')) return '🍎';     // 거창사과
+  if (n.includes('합천')) return '🏯';     // 합천해인사
+
   // 그 외 기본
   return '📍';
 };
