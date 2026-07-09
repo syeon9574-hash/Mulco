@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useApp } from '../context/AppContext';
 import { Header } from '../components/common/Header';
 import { BottomSheet } from '../components/common/BottomSheet';
@@ -295,6 +295,37 @@ const GpsHintText = styled.p`
   margin-bottom: 18px;
   line-height: 1.45;
   padding: 0 4px;
+`;
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const RefreshSpinner = styled.div<{ active: boolean; pullY: number }>`
+  position: absolute;
+  top: ${props => props.pullY - 44}px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: ${props => props.theme.colors.white};
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: ${props => (props.pullY > 15 ? 1 : 0)};
+  transform: translateX(-50%) scale(${props => Math.min(props.pullY / 40, 1)});
+  transition: ${props => (props.pullY === 0 || props.active ? 'top 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s, transform 0.2s' : 'none')};
+
+  span {
+    font-size: 20px;
+    color: ${props => props.theme.colors.point};
+    animation: ${props => (props.active ? spin : 'none')} 0.8s linear infinite;
+    transform: rotate(${props => props.pullY * 3.5}deg);
+  }
 `;
 
 const LobbyWrapper = styled.div`
@@ -592,6 +623,47 @@ export const MainPage: React.FC = () => {
   const [isAddRegionModalOpen, setIsAddRegionModalOpen] = useState(false);
   const [newRegionQuery, setNewRegionQuery] = useState('');
   const [searchRegionsResult, setSearchRegionsResult] = useState<string[]>([]);
+
+  // Pull to refresh states
+  const [touchStart, setTouchStart] = useState(0);
+  const [pullDelta, setPullDelta] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    if (container.scrollTop === 0) {
+      setTouchStart(e.touches[0].clientY);
+    } else {
+      setTouchStart(0);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStart === 0 || isRefreshing) return;
+    const currentY = e.touches[0].clientY;
+    const delta = currentY - touchStart;
+    
+    if (delta > 0) {
+      setPullDelta(Math.min(delta * 0.45, 95));
+      if (delta > 10) {
+        if (e.cancelable) e.preventDefault();
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isRefreshing) return;
+    if (pullDelta > 65) {
+      setIsRefreshing(true);
+      setPullDelta(70);
+      setTimeout(() => {
+        window.location.reload();
+      }, 750);
+    } else {
+      setPullDelta(0);
+    }
+    setTouchStart(0);
+  };
   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   const [currentTab, setCurrentTab] = useState<'all-chat' | 'biology' | 'goods'>('all-chat');
@@ -952,7 +1024,15 @@ export const MainPage: React.FC = () => {
   // Render Lobby if no room is selected
   if (!selectedRoom) {
     return (
-      <LobbyWrapper>
+      <LobbyWrapper 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ position: 'relative' }}
+      >
+        <RefreshSpinner active={isRefreshing} pullY={pullDelta}>
+          <span className="ms">refresh</span>
+        </RefreshSpinner>
         <LobbyHeader>
           <LobbyHeaderTitle>물꼬 동네방 로비</LobbyHeaderTitle>
           <LobbyHeaderActions>
