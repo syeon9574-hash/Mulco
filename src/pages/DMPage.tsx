@@ -311,26 +311,28 @@ export const DMPage: React.FC = () => {
     });
     setChatText('');
 
-    // Trigger mock auto reply
-    setTimeout(() => {
-      if (blockedUsers.includes(uId)) return;
+    // Trigger mock auto reply (Only in test/demo mode)
+    if (currentUser?.user_id.startsWith('test_')) {
+      setTimeout(() => {
+        if (blockedUsers.includes(uId)) return;
 
-      const reply: DmMessage = {
-        message_id: 'dm_auto_' + Date.now(),
-        user_id: uId,
-        type: 'other',
-        content: dmAutoReplies[Math.floor(Math.random() * dmAutoReplies.length)],
-        time: getCurrentTime(),
-      };
-
-      setDmMessages(prev => {
-        const history = prev[uId] || [];
-        return {
-          ...prev,
-          [uId]: [...history, reply]
+        const reply: DmMessage = {
+          message_id: 'dm_auto_' + Date.now(),
+          user_id: uId,
+          type: 'other',
+          content: dmAutoReplies[Math.floor(Math.random() * dmAutoReplies.length)],
+          time: getCurrentTime(),
         };
-      });
-    }, 1000 + Math.random() * 1500);
+
+        setDmMessages(prev => {
+          const history = prev[uId] || [];
+          return {
+            ...prev,
+            [uId]: [...history, reply]
+          };
+        });
+      }, 1000 + Math.random() * 1500);
+    }
   };
 
   const handleLeaveRoom = () => {

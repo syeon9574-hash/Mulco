@@ -616,20 +616,22 @@ export const MainPage: React.FC = () => {
     setMessages(prev => [...prev, newMsg]);
     setChatText('');
 
-    // Simulate Reply
-    setTimeout(() => {
-      const reply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
-      if (blockedUsers.includes(reply.user_id)) return; // Don't show from blocked users
+    // Simulate Reply (Only in test/demo mode)
+    if (currentUser.user_id.startsWith('test_')) {
+      setTimeout(() => {
+        const reply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
+        if (blockedUsers.includes(reply.user_id)) return; // Don't show from blocked users
 
-      const botMsg: ChatMessage = {
-        message_id: 'reply_' + Date.now(),
-        user_id: reply.user_id,
-        type: 'other',
-        content: reply.content,
-        time: getCurrentTime(),
-      };
-      setMessages(prev => [...prev, botMsg]);
-    }, 1200);
+        const botMsg: ChatMessage = {
+          message_id: 'reply_' + Date.now(),
+          user_id: reply.user_id,
+          type: 'other',
+          content: reply.content,
+          time: getCurrentTime(),
+        };
+        setMessages(prev => [...prev, botMsg]);
+      }, 1200);
+    }
   };
 
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
@@ -855,8 +857,13 @@ export const MainPage: React.FC = () => {
               );
             })}
 
-            {/* 프리미엄 락 카드 시각화 */}
-            <LockCard onClick={() => showToast('🔒 프리미엄 멤버십을 결제하시면 3개 이상의 동네를 제한 없이 설정할 수 있습니다! (추후 제공 예정)')}>
+            <LockCard onClick={() => {
+              if (currentUser?.user_id.startsWith('test_')) {
+                showToast('🔒 프리미엄 멤버십을 결제하시면 3개 이상의 동네를 제한 없이 설정할 수 있습니다! (추후 제공 예정)');
+              } else {
+                showToast('🔒 프리미엄 멤버십 전용 기능입니다. 멤버십을 구독하고 제한 없이 동네방에 참여해 보세요.');
+              }
+            }}>
               <LockDetails>
                 <RoomIcon style={{ backgroundColor: '#FFF9E6' }}>🔒</RoomIcon>
                 <LockText>
