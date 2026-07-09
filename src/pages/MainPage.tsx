@@ -732,37 +732,23 @@ export const MainPage: React.FC = () => {
     // Listen to marketItems
     const qMarket = query(collection(db, 'marketItems'), where('region', '==', selectedRoom));
     const unsubMarket = onSnapshot(qMarket, (snapshot) => {
-      if (snapshot.empty) {
-        // Fallback to mock data
-        const defaultBio = biologyItems.filter(item => {
-          const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
-          return itemUser?.region === selectedRoom;
-        });
-        const defaultGoods = goodsItems.filter(item => {
-          const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
-          return itemUser?.region === selectedRoom;
-        });
-        setRoomBiologyItems(defaultBio);
-        setRoomGoodsItems(defaultGoods);
-      } else {
-        const bios: MarketItem[] = [];
-        const goods: MarketItem[] = [];
-        snapshot.forEach(doc => {
-          const data = { item_id: doc.id, ...doc.data() } as MarketItem;
-          if (data.category === 'BIOLOGY') {
-            bios.push(data);
-          } else {
-            goods.push(data);
-          }
-        });
-        // Sort by created_at desc (latest first)
-        bios.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        goods.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setRoomBiologyItems(bios);
-        setRoomGoodsItems(goods);
-      }
+      const bios: MarketItem[] = [];
+      const goods: MarketItem[] = [];
+      snapshot.forEach(doc => {
+        const data = { item_id: doc.id, ...doc.data() } as MarketItem;
+        if (data.category === 'BIOLOGY') {
+          bios.push(data);
+        } else {
+          goods.push(data);
+        }
+      });
+      // Sort by created_at desc (latest first)
+      bios.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
+      goods.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
+      setRoomBiologyItems(bios);
+      setRoomGoodsItems(goods);
     }, (err) => {
-      console.warn("Firestore marketItems fetch failed, using fallback: ", err);
+      console.warn("Firestore marketItems fetch failed: ", err);
     });
 
     return () => {
@@ -1256,40 +1242,54 @@ export const MainPage: React.FC = () => {
 
         {/* Tab 2: Biology Market */}
         <TabContent active={currentTab === 'biology'}>
-          <MarketGrid>
-            {filteredBiology.map(item => (
-              <MarketCard 
-                key={item.item_id}
-                item={item}
-                seller={users[item.user_id] || currentUser}
-                isMine={item.user_id === currentUser?.user_id}
-                onCompleteClick={(e) => {
-                  e.stopPropagation();
-                  handleCompleteItem(item.item_id, 'BIOLOGY');
-                }}
-                onCardClick={() => navigate(`/profile/${item.user_id}`)}
-              />
-            ))}
-          </MarketGrid>
+          {filteredBiology.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', color: 'var(--text-light)', opacity: 0.65 }}>
+              <span className="ms" style={{ fontSize: '48px', marginBottom: '12px', color: 'var(--point)' }}>phishing</span>
+              <p style={{ fontSize: '0.9rem', fontWeight: 700 }}>아직 등록된 생물 분양글이 없습니다.</p>
+            </div>
+          ) : (
+            <MarketGrid>
+              {filteredBiology.map(item => (
+                <MarketCard 
+                  key={item.item_id}
+                  item={item}
+                  seller={users[item.user_id] || currentUser}
+                  isMine={item.user_id === currentUser?.user_id}
+                  onCompleteClick={(e) => {
+                    e.stopPropagation();
+                    handleCompleteItem(item.item_id, 'BIOLOGY');
+                  }}
+                  onCardClick={() => navigate(`/profile/${item.user_id}`)}
+                />
+              ))}
+            </MarketGrid>
+          )}
         </TabContent>
 
         {/* Tab 3: Goods Market */}
         <TabContent active={currentTab === 'goods'}>
-          <MarketGrid>
-            {filteredGoods.map(item => (
-              <MarketCard 
-                key={item.item_id}
-                item={item}
-                seller={users[item.user_id] || currentUser}
-                isMine={item.user_id === currentUser?.user_id}
-                onCompleteClick={(e) => {
-                  e.stopPropagation();
-                  handleCompleteItem(item.item_id, 'GOODS');
-                }}
-                onCardClick={() => navigate(`/profile/${item.user_id}`)}
-              />
-            ))}
-          </MarketGrid>
+          {filteredGoods.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', color: 'var(--text-light)', opacity: 0.65 }}>
+              <span className="ms" style={{ fontSize: '48px', marginBottom: '12px', color: 'var(--point)' }}>inventory_2</span>
+              <p style={{ fontSize: '0.9rem', fontWeight: 700 }}>아직 등록된 용품/수초 분양글이 없습니다.</p>
+            </div>
+          ) : (
+            <MarketGrid>
+              {filteredGoods.map(item => (
+                <MarketCard 
+                  key={item.item_id}
+                  item={item}
+                  seller={users[item.user_id] || currentUser}
+                  isMine={item.user_id === currentUser?.user_id}
+                  onCompleteClick={(e) => {
+                    e.stopPropagation();
+                    handleCompleteItem(item.item_id, 'GOODS');
+                  }}
+                  onCardClick={() => navigate(`/profile/${item.user_id}`)}
+                />
+              ))}
+            </MarketGrid>
+          )}
         </TabContent>
       </TabWrapper>
 
