@@ -6,13 +6,14 @@ import { useApp } from '../context/AppContext';
 const PageWrapper = styled.section`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   background-color: ${props => props.theme.colors.bg};
+  overflow-y: auto;
 `;
 
 const GradientHeader = styled.div`
   background: linear-gradient(160deg, ${props => props.theme.colors.main} 0%, ${props => props.theme.colors.sub} 100%);
-  padding: 60px 24px 80px;
+  padding: 32px 24px 48px;
   text-align: center;
 `;
 
