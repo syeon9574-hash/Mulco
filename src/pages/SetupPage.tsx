@@ -128,6 +128,7 @@ const SearchInputRow = styled.div`
 
 const SearchInput = styled.input`
   flex: 1;
+  min-width: 0;
   background-color: ${props => props.theme.colors.white};
   border: 1.5px solid ${props => props.theme.colors.muted};
   border-radius: ${props => props.theme.borderRadius.md};
