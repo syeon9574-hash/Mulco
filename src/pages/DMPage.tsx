@@ -6,7 +6,7 @@ import { BottomSheet } from '../components/common/BottomSheet';
 import { DmMessage } from '../types';
 import { getCurrentTime } from '../utils/format';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -292,9 +292,12 @@ export const DMPage: React.FC = () => {
   useEffect(() => {
     if (!currentUser || !targetUser) return;
 
+    // Limit to latest 50 messages to protect free quota
     const q = query(
       collection(db, 'dmMessages'),
-      where('chat_key', '==', chatKey)
+      where('chat_key', '==', chatKey),
+      orderBy('timestamp', 'desc'),
+      limit(50)
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
@@ -307,7 +310,7 @@ export const DMPage: React.FC = () => {
         snapshot.forEach(doc => {
           msgs.push({ message_id: doc.id, ...doc.data() } as DmMessage);
         });
-        // Sort by timestamp asc
+        // Sort by timestamp asc (chronological display order)
         msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
         
         // Map messages' type field based on sender_id

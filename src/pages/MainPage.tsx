@@ -9,7 +9,7 @@ import { MarketCard } from '../components/chat/MarketCard';
 import { MarketItem, ChatMessage } from '../types';
 import { getCurrentTime, resizeAndCompressImage } from '../utils/format';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -607,8 +607,13 @@ export const MainPage: React.FC = () => {
   useEffect(() => {
     if (!selectedRoom) return;
 
-    // Listen to chatMessages
-    const qMessages = query(collection(db, 'chatMessages'), where('region', '==', selectedRoom));
+    // Listen to chatMessages (limit to latest 50 to protect free quota)
+    const qMessages = query(
+      collection(db, 'chatMessages'),
+      where('region', '==', selectedRoom),
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    );
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
       if (snapshot.empty) {
         // Fallback to mock data for selectedRoom
@@ -622,7 +627,7 @@ export const MainPage: React.FC = () => {
         snapshot.forEach(doc => {
           msgs.push({ message_id: doc.id, ...doc.data() } as ChatMessage);
         });
-        // Sort by timestamp asc
+        // Sort by timestamp asc (chronological display order)
         msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
         setRoomMessages(msgs);
       }
