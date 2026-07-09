@@ -602,6 +602,30 @@ const popularRooms = [
   { name: '부산광역시', count: 82, emoji: '🌊' }
 ];
 
+// 지역명으로 대표 이모지 반환
+const getRegionEmoji = (regionName: string): string => {
+  const name = regionName;
+  if (name.includes('서울')) return '🏙️';
+  if (name.includes('부산')) return '🌊';
+  if (name.includes('대구')) return '🍎';
+  if (name.includes('인천')) return '⚓';
+  if (name.includes('광주')) return '🌸';
+  if (name.includes('대전')) return '🌻';
+  if (name.includes('울산')) return '🏭';
+  if (name.includes('세종')) return '🏛️';
+  if (name.includes('경기') || name.includes('수원') || name.includes('성남') || name.includes('용인') || name.includes('고양') || name.includes('화성') || name.includes('안산') || name.includes('남양주') || name.includes('평택') || name.includes('의정부') || name.includes('시흥') || name.includes('파주')) return '🌾';
+  if (name.includes('강원') || name.includes('춘천') || name.includes('원주') || name.includes('강릉') || name.includes('속초')) return '🏔️';
+  if (name.includes('충북') || name.includes('청주') || name.includes('충주')) return '🌲';
+  if (name.includes('충남') || name.includes('천안') || name.includes('아산') || name.includes('공주') || name.includes('논산')) return '🌾';
+  if (name.includes('전북') || name.includes('전주') || name.includes('익산') || name.includes('군산')) return '🌻';
+  if (name.includes('전남') || name.includes('목포') || name.includes('여수') || name.includes('순천') || name.includes('광양')) return '🐚';
+  if (name.includes('경북') || name.includes('포항') || name.includes('경주') || name.includes('구미') || name.includes('안동')) return '🏯';
+  if (name.includes('경남') || name.includes('창원') || name.includes('진주') || name.includes('통영') || name.includes('거제')) return '⛵';
+  if (name.includes('제주')) return '🍊';
+  // 그 외 기본
+  return '📍';
+};
+
 export const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const { 
@@ -1053,7 +1077,7 @@ export const MainPage: React.FC = () => {
               return (
                 <RoomCard key={idx} registered onClick={() => handleEnterRoom(regionName)}>
                   <RoomDetails>
-                    <RoomIcon>🏠</RoomIcon>
+                    <RoomIcon>{getRegionEmoji(regionName)}</RoomIcon>
                     <RoomText>
                       <RoomName>{regionName} 방</RoomName>
                       <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
