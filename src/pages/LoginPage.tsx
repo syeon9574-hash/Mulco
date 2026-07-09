@@ -115,6 +115,25 @@ const GoogleBtn = styled(Btn)`
   }
 `;
 
+const TestBtn = styled(Btn)`
+  background-color: ${props => props.theme.colors.sub};
+  color: ${props => props.theme.colors.point};
+  border: 1.5px solid ${props => props.theme.colors.main};
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  max-width: 320px;
+  margin-top: 10px;
+
+  &:hover {
+    background: ${props => props.theme.colors.main};
+    transform: translateY(-1.5px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 const FooterText = styled.p`
   margin-top: auto;
   padding-top: 40px;
@@ -167,6 +186,25 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const handleTestLogin = () => {
+    setIsLoading(true);
+    const testUser = {
+      user_id: 'test_u001',
+      nickname: '물꼬친구',
+      email: 'test@mulco.com',
+      region: '서울특별시',
+      regions: ['서울특별시'],
+      profile_memo: '테스트 계정입니다. 반갑습니다! 🐠',
+      avatar: 'images/avatar-girl.png',
+      created_at: new Date().toISOString().split('T')[0]
+    };
+    localStorage.setItem('mulco_user', JSON.stringify(testUser));
+    setCurrentUser(testUser);
+    showToast('테스트 계정으로 로그인했습니다! 🐠');
+    navigate('/setup');
+    setIsLoading(false);
+  };
+
   return (
     <PageWrapper>
       <HeroSection>
@@ -190,6 +228,12 @@ export const LoginPage: React.FC = () => {
           </svg>
           {isLoading ? '연결 중...' : 'Google 계정으로 계속하기'}
         </GoogleBtn>
+
+        {/* Test Login Button for fast local testing */}
+        <TestBtn type="button" onClick={handleTestLogin} disabled={isLoading}>
+          <span className="ms" style={{ fontSize: '20px' }}>bolt</span>
+          테스트 계정으로 1초 만에 로그인
+        </TestBtn>
 
         <FooterText>
           가입 시 <span className="text-point" style={{ fontWeight: 600 }}>이용약관</span> 및{' '}

@@ -422,6 +422,7 @@ export const SetupPage: React.FC = () => {
       user_id: currentUser?.user_id || 'u001',
       nickname: nickname.trim(),
       region: selectedRegion || '서울특별시',
+      regions: [selectedRegion || '서울특별시'],
       avatar: selectedAvatar,
       profile_memo: currentUser?.profile_memo || '구피 덕후 3년차 🐟 치어 나눔 좋아합니다!',
       created_at: currentUser?.created_at || new Date().toISOString().split('T')[0]

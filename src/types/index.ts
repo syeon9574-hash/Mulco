@@ -3,6 +3,7 @@ export interface User {
   nickname: string;
   phone_number?: string;
   region: string;
+  regions?: string[];
   profile_memo: string;
   created_at?: string;
   avatar_letter?: string;

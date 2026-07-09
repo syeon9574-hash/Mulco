@@ -98,31 +98,31 @@ const AdLabel = styled.span`
   font-size: 0.65rem;
   font-weight: 700;
   padding: 1.5px 5px;
-  border-radius: 3px;
-  text-transform: uppercase;
+  border-radius: 4px;
 `;
 
 const ChatInputBar = styled.div`
-  padding: 12px 16px;
-  background-color: ${props => props.theme.colors.bg};
+  background-color: ${props => props.theme.colors.white};
   border-top: 1px solid ${props => props.theme.colors.muted};
+  padding: 12px 16px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 11;
+  z-index: 99;
 `;
 
 const ChatInput = styled.input`
   flex: 1;
-  background-color: ${props => props.theme.colors.white};
-  border: 1.5px solid ${props => props.theme.colors.muted};
-  border-radius: 9999px;
-  padding: 10px 16px;
-  font-size: 0.88rem;
+  background-color: ${props => props.theme.colors.bg};
+  border: 1px solid ${props => props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 11px 16px;
+  font-size: 0.9rem;
+  outline: none;
 
   &:focus {
     border-color: ${props => props.theme.colors.point};
@@ -130,45 +130,41 @@ const ChatInput = styled.input`
 `;
 
 const SendBtn = styled.button`
-  width: 38px;
-  height: 38px;
   background-color: ${props => props.theme.colors.point};
   color: ${props => props.theme.colors.white};
+  width: 40px;
+  height: 40px;
   border-radius: ${props => props.theme.borderRadius.circle};
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: ${props => props.theme.shadows.sm};
-  
-  &:active {
-    opacity: 0.9;
-  }
 `;
 
 const MarketGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 16px;
-  overflow-y: auto;
   flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: ${props => props.theme.colors.bg};
 `;
 
 const Fab = styled.button`
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
   width: 56px;
   height: 56px;
   border-radius: ${props => props.theme.borderRadius.circle};
   background-color: ${props => props.theme.colors.point};
   color: ${props => props.theme.colors.white};
-  box-shadow: ${props => props.theme.shadows.lg};
+  box-shadow: 0 4px 16px rgba(58, 96, 115, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 90;
-  transition: transform 0.2s ease;
+  z-index: 98;
+  transition: ${props => props.theme.transitions.default};
 
   &:active {
     transform: scale(0.95);
@@ -177,22 +173,24 @@ const Fab = styled.button`
 
 const MenuItem = styled.button`
   width: 100%;
-  height: 50px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: 16px;
-  border: 1.5px solid ${props => props.theme.colors.muted};
-  border-radius: ${props => props.theme.borderRadius.md};
-  font-size: 0.92rem;
-  font-weight: 700;
-  background-color: ${props => props.theme.colors.white};
+  gap: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: ${props => props.theme.colors.text};
-  margin-bottom: 8px;
-  gap: 8px;
+  background: transparent;
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.md};
+  cursor: pointer;
+
+  span {
+    color: ${props => props.theme.colors.point};
+  }
 
   &:active {
-    background-color: #f8f9fa;
+    background-color: rgba(0, 0, 0, 0.05);
   }
 `;
 
@@ -287,6 +285,250 @@ const PrimaryBtn = styled.button`
   }
 `;
 
+const GpsHintText = styled.p`
+  font-size: 0.76rem;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+  margin-top: -2px;
+  margin-bottom: 18px;
+  line-height: 1.45;
+  padding: 0 4px;
+`;
+
+const LobbyWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: ${props => props.theme.colors.bg};
+`;
+
+const LobbyHeader = styled.header`
+  height: 56px;
+  background-color: ${props => props.theme.colors.white};
+  border-bottom: 1.5px solid ${props => props.theme.colors.muted};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+`;
+
+const LobbyHeaderTitle = styled.h1`
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.point};
+`;
+
+const LobbyLogoutBtn = styled.button`
+  background: transparent;
+  border: none;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+`;
+
+const LobbyContent = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const LobbySection = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const LobbySectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const LobbySectionTitle = styled.h3`
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.text};
+`;
+
+const LobbyAddBtn = styled.button`
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: ${props => props.theme.colors.point};
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const RoomCard = styled.div<{ registered?: boolean }>`
+  background-color: ${props => props.theme.colors.white};
+  border: 1.5px solid ${props => props.registered ? props.theme.colors.main : props.theme.colors.muted};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+
+  &:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-color: ${props => props.theme.colors.point};
+  }
+`;
+
+const RoomDetails = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const RoomIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: ${props => props.theme.colors.sub};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+`;
+
+const RoomText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const RoomName = styled.span`
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.text};
+`;
+
+const RoomMembers = styled.span`
+  font-size: 0.76rem;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+`;
+
+const EnterArrow = styled.span`
+  font-size: 1rem;
+  color: ${props => props.theme.colors.point};
+  opacity: 0.7;
+`;
+
+const LockCard = styled(RoomCard)`
+  border: 1.5px dashed ${props => props.theme.colors.muted};
+  background-color: rgba(240, 240, 240, 0.3);
+  cursor: not-allowed;
+
+  &:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: ${props => props.theme.colors.muted};
+  }
+`;
+
+const LockDetails = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.6;
+`;
+
+const LockText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const LockTitle = styled.span`
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.text};
+`;
+
+const LockBadge = styled.span`
+  font-size: 0.68rem;
+  background-color: #ffd700;
+  color: #5d4d00;
+  font-weight: 700;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  width: fit-content;
+`;
+
+const AddRegionModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+`;
+
+const AddRegionModalContent = styled.div`
+  background: ${props => props.theme.colors.white};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  box-sizing: border-box;
+  animation: slideUp 0.3s ease;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.text};
+`;
+
+const CloseBtn = styled.button`
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+`;
+
+const SearchBtn = styled.button`
+  background-color: ${props => props.theme.colors.main};
+  color: ${props => props.theme.colors.point};
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  transition: ${props => props.theme.transitions.default};
+
+  &:active {
+    background-color: #FFCDD9;
+  }
+`;
 
 const autoReplies = [
   { user_id: 'u002', content: '저도 궁금했던 내용이에요 😊' },
@@ -295,10 +537,20 @@ const autoReplies = [
   { user_id: 'u004', content: '알려주셔서 감사해요! 초보라 모르는 게 많아요 😅' },
 ];
 
+const popularRooms = [
+  { name: '서울특별시', count: 184, emoji: '🏙️' },
+  { name: '경기도 성남시', count: 96, emoji: '🌿' },
+  { name: '경기도 수원시', count: 72, emoji: '🏰' },
+  { name: '인천광역시', count: 54, emoji: '⚓' },
+  { name: '대구광역시', count: 48, emoji: '🍎' },
+  { name: '부산광역시', count: 82, emoji: '🌊' }
+];
+
 export const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const { 
     currentUser, 
+    setCurrentUser,
     logout, 
     messages, 
     setMessages, 
@@ -310,6 +562,12 @@ export const MainPage: React.FC = () => {
     blockedUsers,
     showToast 
   } = useApp();
+
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [isAddRegionModalOpen, setIsAddRegionModalOpen] = useState(false);
+  const [newRegionQuery, setNewRegionQuery] = useState('');
+  const [searchRegionsResult, setSearchRegionsResult] = useState<string[]>([]);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   const [currentTab, setCurrentTab] = useState<'all-chat' | 'biology' | 'goods'>('all-chat');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -328,6 +586,8 @@ export const MainPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const userRegions = currentUser?.regions || (currentUser?.region ? [currentUser.region] : []);
+
   // Redirect if not logged in
   useEffect(() => {
     if (!currentUser) {
@@ -343,7 +603,7 @@ export const MainPage: React.FC = () => {
   }, [messages, currentTab]);
 
   const handleSendMessage = () => {
-    if (!chatText.trim() || !currentUser) return;
+    if (!chatText.trim() || !currentUser || !selectedRoom) return;
 
     const newMsg: ChatMessage = {
       message_id: 'new_' + Date.now(),
@@ -361,27 +621,26 @@ export const MainPage: React.FC = () => {
       const reply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
       if (blockedUsers.includes(reply.user_id)) return; // Don't show from blocked users
 
-      const autoMsg: ChatMessage = {
-        message_id: 'auto_' + Date.now(),
+      const botMsg: ChatMessage = {
+        message_id: 'reply_' + Date.now(),
         user_id: reply.user_id,
         type: 'other',
         content: reply.content,
         time: getCurrentTime(),
       };
-      setMessages(prev => [...prev, autoMsg]);
-    }, 1500 + Math.random() * 2000);
+      setMessages(prev => [...prev, botMsg]);
+    }, 1200);
   };
 
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
     const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
-    
     setter(prev => prev.map(item => {
       if (item.item_id === itemId) {
         return { ...item, status: 'COMPLETED' };
       }
       return item;
     }));
-    showToast('✓ 분양을 완료로 변경했어요.');
+    showToast('🎉 거래 완료 상태로 변경되었습니다!');
   };
 
   const triggerFileSelect = () => {
@@ -411,7 +670,7 @@ export const MainPage: React.FC = () => {
   };
 
   const handleCreatePost = () => {
-    if (!postTitle.trim() || !postDesc.trim() || !currentUser) {
+    if (!postTitle.trim() || !postDesc.trim() || !currentUser || !selectedRoom) {
       showToast('제목과 내용을 적어주세요.');
       return;
     }
@@ -445,28 +704,265 @@ export const MainPage: React.FC = () => {
     showToast('✅ 등록되었습니다!');
   };
 
+  const handleEnterRoom = (roomName: string) => {
+    if (!currentUser) return;
+    
+    // Sync current user region in AppContext (automatically syncs neighbors' mock data region)
+    const updatedUser = {
+      ...currentUser,
+      region: roomName
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
+    
+    setSelectedRoom(roomName);
+    showToast(`📍 ${roomName} 방에 입장했습니다.`);
+  };
+
+  const handleAddRegion = (regionName: string) => {
+    if (!currentUser) return;
+    
+    if (userRegions.includes(regionName)) {
+      showToast('이미 등록된 동네입니다.');
+      return;
+    }
+    
+    if (userRegions.length >= 2) {
+      showToast('🔒 3개 이상 지역 등록은 프리미엄 멤버십 기능입니다.');
+      return;
+    }
+    
+    const updatedUser = {
+      ...currentUser,
+      regions: [...userRegions, regionName]
+    };
+    
+    setCurrentUser(updatedUser);
+    localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
+    
+    showToast(`✅ '${regionName}' 동네가 추가되었습니다.`);
+    setIsAddRegionModalOpen(false);
+    setNewRegionQuery('');
+    setSearchRegionsResult([]);
+  };
+
+  const handleSearchNewRegion = async () => {
+    if (!newRegionQuery.trim()) {
+      showToast('검색어를 입력해 주세요.');
+      return;
+    }
+
+    setIsSearchLoading(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newRegionQuery.trim())}&accept-language=ko&addressdetails=1&countrycodes=kr`
+      );
+      if (!response.ok) throw new Error('API failed');
+      const data = await response.json();
+
+      if (data.length === 0) {
+        showToast('검색 결과가 없습니다.');
+        setSearchRegionsResult([]);
+        return;
+      }
+
+      const formattedList = data.map((item: any) => {
+        const addr = item.address;
+        const city = addr.city || addr.town || addr.province || addr.state || '';
+        const county = addr.county || addr.borough || addr.district || '';
+        
+        const cleanCity = city.trim();
+        const cleanCounty = county.trim();
+        
+        if (cleanCity.includes('특별시') || cleanCity.includes('광역시') || cleanCity.includes('특별자치시')) {
+          return cleanCity;
+        } else if (cleanCity && cleanCounty) {
+          return `${cleanCity} ${cleanCounty}`;
+        } else if (cleanCity) {
+          return cleanCity;
+        } else {
+          return item.display_name.split(',')[0];
+        }
+      });
+
+      const uniqueList = formattedList.filter((v: string, i: number, a: string[]) => v && a.indexOf(v) === i);
+      setSearchRegionsResult(uniqueList);
+    } catch (err) {
+      console.error(err);
+      showToast('검색에 실패했습니다.');
+    } finally {
+      setIsSearchLoading(false);
+    }
+  };
+
   const filteredMessages = messages.filter(msg => {
     const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
-    const isSameRegion = msgUser ? msgUser.region === currentUser?.region : true;
+    const isSameRegion = msgUser ? msgUser.region === selectedRoom : true;
     return !blockedUsers.includes(msg.user_id) && isSameRegion;
   });
 
   const filteredBiology = biologyItems.filter(item => {
     const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
-    const isSameRegion = itemUser ? itemUser.region === currentUser?.region : true;
+    const isSameRegion = itemUser ? itemUser.region === selectedRoom : true;
     return !blockedUsers.includes(item.user_id) && isSameRegion;
   });
 
   const filteredGoods = goodsItems.filter(item => {
     const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
-    const isSameRegion = itemUser ? itemUser.region === currentUser?.region : true;
+    const isSameRegion = itemUser ? itemUser.region === selectedRoom : true;
     return !blockedUsers.includes(item.user_id) && isSameRegion;
   });
+
+  // Render Lobby if no room is selected
+  if (!selectedRoom) {
+    return (
+      <LobbyWrapper>
+        <LobbyHeader>
+          <LobbyHeaderTitle>물꼬 동네방 로비</LobbyHeaderTitle>
+          <LobbyLogoutBtn onClick={logout}>로그아웃</LobbyLogoutBtn>
+        </LobbyHeader>
+
+        <LobbyContent>
+          {/* 내 동네 목록 */}
+          <LobbySection>
+            <LobbySectionHeader>
+              <LobbySectionTitle>내 동네방</LobbySectionTitle>
+              <LobbyAddBtn onClick={() => {
+                if (userRegions.length >= 2) {
+                  showToast('🔒 3개 이상 지역 등록은 프리미엄 멤버십 기능입니다.');
+                } else {
+                  setIsAddRegionModalOpen(true);
+                }
+              }}>
+                <span className="ms" style={{ fontSize: '16px' }}>add</span> 동네 추가하기
+              </LobbyAddBtn>
+            </LobbySectionHeader>
+
+            {userRegions.map((regionName, idx) => {
+              // Calculate mock counts
+              const baseCount = regionName === '서울특별시' ? 184 : (regionName.includes('성남') ? 96 : 42);
+              return (
+                <RoomCard key={idx} registered onClick={() => handleEnterRoom(regionName)}>
+                  <RoomDetails>
+                    <RoomIcon>🏠</RoomIcon>
+                    <RoomText>
+                      <RoomName>{regionName} 방</RoomName>
+                      <RoomMembers>👥 접속자 {baseCount}명</RoomMembers>
+                    </RoomText>
+                  </RoomDetails>
+                  <EnterArrow>입장 →</EnterArrow>
+                </RoomCard>
+              );
+            })}
+
+            {/* 프리미엄 락 카드 시각화 */}
+            <LockCard onClick={() => showToast('🔒 프리미엄 멤버십을 결제하시면 3개 이상의 동네를 제한 없이 설정할 수 있습니다! (추후 제공 예정)')}>
+              <LockDetails>
+                <RoomIcon style={{ backgroundColor: '#FFF9E6' }}>🔒</RoomIcon>
+                <LockText>
+                  <LockTitle>3번째 동네 등록하기</LockTitle>
+                  <LockBadge>PREMIUM</LockBadge>
+                </LockText>
+              </LockDetails>
+              <span className="ms" style={{ color: '#E0E0DB' }}>lock</span>
+            </LockCard>
+          </LobbySection>
+
+          {/* 전체 동네방 둘러보기 */}
+          <LobbySection>
+            <LobbySectionTitle>인기 동네방 둘러보기</LobbySectionTitle>
+            {popularRooms.map((room, idx) => {
+              const isRegistered = userRegions.includes(room.name);
+              return (
+                <RoomCard 
+                  key={idx} 
+                  onClick={() => {
+                    if (isRegistered) {
+                      handleEnterRoom(room.name);
+                    } else {
+                      showToast(`💡 이 방에 참여하려면 '내 동네 추가하기'로 먼저 등록해 주세요!`);
+                    }
+                  }}
+                  style={{ opacity: isRegistered ? 1 : 0.7 }}
+                >
+                  <RoomDetails>
+                    <RoomIcon>{room.emoji}</RoomIcon>
+                    <RoomText>
+                      <RoomName>{room.name} 방</RoomName>
+                      <RoomMembers>👥 접속자 {room.count}명</RoomMembers>
+                    </RoomText>
+                  </RoomDetails>
+                  {isRegistered ? (
+                    <EnterArrow>입장 →</EnterArrow>
+                  ) : (
+                    <span className="ms" style={{ fontSize: '18px', color: '#E0E0DB' }}>add_circle</span>
+                  )}
+                </RoomCard>
+              );
+            })}
+          </LobbySection>
+        </LobbyContent>
+
+        {/* 동네 추가 모달 */}
+        {isAddRegionModalOpen && (
+          <AddRegionModalOverlay onClick={() => setIsAddRegionModalOpen(false)}>
+            <AddRegionModalContent onClick={(e) => e.stopPropagation()}>
+              <ModalHeader>
+                <ModalTitle>새 동네 추가 (최대 2개 무료)</ModalTitle>
+                <CloseBtn onClick={() => setIsAddRegionModalOpen(false)}>×</CloseBtn>
+              </ModalHeader>
+              
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <ModalInput 
+                  style={{ flex: 1 }}
+                  placeholder="예: 서울, 성남, 부산" 
+                  value={newRegionQuery}
+                  onChange={e => setNewRegionQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleSearchNewRegion();
+                  }}
+                />
+                <SearchBtn onClick={handleSearchNewRegion} disabled={isSearchLoading}>
+                  {isSearchLoading ? '검색...' : '검색'}
+                </SearchBtn>
+              </div>
+
+              <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {searchRegionsResult.map((res, i) => (
+                  <div 
+                    key={i} 
+                    onClick={() => handleAddRegion(res)}
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      fontSize: '0.88rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      border: '1px solid #E0E0DB'
+                    }}
+                  >
+                    📍 {res} 추가하기
+                  </div>
+                ))}
+                {searchRegionsResult.length === 0 && !isSearchLoading && (
+                  <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#8c8c8c', padding: '16px 0' }}>
+                    추가할 동네의 시/군 이름을 검색해 주세요.
+                  </div>
+                )}
+              </div>
+            </AddRegionModalContent>
+          </AddRegionModalOverlay>
+        )}
+      </LobbyWrapper>
+    );
+  }
 
   return (
     <Container>
       <Header 
-        title={currentUser?.region + ' 물생활 단톡방'} 
+        title={`${selectedRoom} 방`} 
+        onBack={() => setSelectedRoom(null)}
         onMenu={() => setIsMenuOpen(true)}
       />
 
@@ -680,7 +1176,6 @@ export const MainPage: React.FC = () => {
           ref={cameraInputRef} 
           type="file" 
           accept="image/*" 
-          capture="environment" 
           style={{ display: 'none' }} 
           onChange={handleImageChange} 
         />
