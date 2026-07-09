@@ -5,6 +5,8 @@ import { useApp } from '../context/AppContext';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { DmMessage } from '../types';
 import { getCurrentTime } from '../utils/format';
+import { db } from '../firebase';
+import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -276,6 +278,9 @@ export const DMPage: React.FC = () => {
 
   const targetUser = users[userId || ''];
 
+  const chatKey = [currentUser?.user_id || '', targetUser?.user_id || ''].sort().join('_');
+  const [localDmMessages, setLocalDmMessages] = useState<DmMessage[]>([]);
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/');
@@ -285,8 +290,48 @@ export const DMPage: React.FC = () => {
   }, [currentUser, targetUser, navigate]);
 
   useEffect(() => {
+    if (!currentUser || !targetUser) return;
+
+    const q = query(
+      collection(db, 'dmMessages'),
+      where('chat_key', '==', chatKey)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        // Fallback to local mock data
+        const fallback = dmMessages[targetUser.user_id] || [];
+        setLocalDmMessages(fallback);
+      } else {
+        const msgs: DmMessage[] = [];
+        snapshot.forEach(doc => {
+          msgs.push({ message_id: doc.id, ...doc.data() } as DmMessage);
+        });
+        // Sort by timestamp asc
+        msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
+        
+        // Map messages' type field based on sender_id
+        const mappedMsgs = msgs.map(m => {
+          const mData = m as any;
+          return {
+            ...m,
+            type: mData.sender_id === currentUser.user_id ? 'mine' : 'other',
+            user_id: mData.sender_id
+          } as DmMessage;
+        });
+
+        setLocalDmMessages(mappedMsgs);
+      }
+    }, (err) => {
+      console.warn("Firestore DMs fetch failed, using fallback: ", err);
+    });
+
+    return () => unsub();
+  }, [currentUser, targetUser, chatKey, dmMessages]);
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [dmMessages]);
+  }, [localDmMessages]);
 
   if (!targetUser) return null;
 
@@ -294,20 +339,18 @@ export const DMPage: React.FC = () => {
     if (!chatText.trim() || !currentUser) return;
 
     const uId = targetUser.user_id;
-    const newMsg: DmMessage = {
-      message_id: 'dm_new_' + Date.now(),
-      user_id: currentUser.user_id,
-      type: 'mine',
+    const newMsg = {
+      sender_id: currentUser.user_id,
+      receiver_id: uId,
+      chat_key: chatKey,
       content: chatText.trim(),
       time: getCurrentTime(),
+      timestamp: Date.now()
     };
 
-    setDmMessages(prev => {
-      const history = prev[uId] || [];
-      return {
-        ...prev,
-        [uId]: [...history, newMsg]
-      };
+    addDoc(collection(db, 'dmMessages'), newMsg).catch(err => {
+      console.error("Failed to send DM: ", err);
+      showToast('❌ 메시지 전송에 실패했습니다.');
     });
     setChatText('');
 
@@ -316,31 +359,23 @@ export const DMPage: React.FC = () => {
       setTimeout(() => {
         if (blockedUsers.includes(uId)) return;
 
-        const reply: DmMessage = {
-          message_id: 'dm_auto_' + Date.now(),
-          user_id: uId,
-          type: 'other',
+        const reply = {
+          sender_id: uId,
+          receiver_id: currentUser.user_id,
+          chat_key: chatKey,
           content: dmAutoReplies[Math.floor(Math.random() * dmAutoReplies.length)],
           time: getCurrentTime(),
+          timestamp: Date.now()
         };
 
-        setDmMessages(prev => {
-          const history = prev[uId] || [];
-          return {
-            ...prev,
-            [uId]: [...history, reply]
-          };
+        addDoc(collection(db, 'dmMessages'), reply).catch(err => {
+          console.error("Failed to send mock DM reply: ", err);
         });
       }, 1000 + Math.random() * 1500);
     }
   };
 
   const handleLeaveRoom = () => {
-    setDmMessages(prev => {
-      const next = { ...prev };
-      delete next[targetUser.user_id];
-      return next;
-    });
     showToast(`🚪 ${targetUser.nickname}님과의 대화방을 나갔습니다.`);
     navigate('/main');
   };
@@ -357,7 +392,7 @@ export const DMPage: React.FC = () => {
     return avatarBgMap[user.avatar] || 'var(--main)';
   };
 
-  const history = dmMessages[targetUser.user_id] || [];
+  const history = localDmMessages;
   const isBlocked = blockedUsers.includes(targetUser.user_id);
 
   return (

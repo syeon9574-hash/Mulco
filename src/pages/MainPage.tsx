@@ -8,6 +8,8 @@ import { ChatBubble } from '../components/chat/ChatMessage';
 import { MarketCard } from '../components/chat/MarketCard';
 import { MarketItem, ChatMessage } from '../types';
 import { getCurrentTime, resizeAndCompressImage } from '../utils/format';
+import { db } from '../firebase';
+import { collection, query, where, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -587,6 +589,10 @@ export const MainPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
+  const [roomBiologyItems, setRoomBiologyItems] = useState<MarketItem[]>([]);
+  const [roomGoodsItems, setRoomGoodsItems] = useState<MarketItem[]>([]);
+
   const userRegions = currentUser?.regions || (currentUser?.region ? [currentUser.region] : []);
 
   // Redirect if not logged in
@@ -596,25 +602,98 @@ export const MainPage: React.FC = () => {
     }
   }, [currentUser, navigate]);
 
+  // Firestore real-time listener for selectedRoom
+  useEffect(() => {
+    if (!selectedRoom) return;
+
+    // Listen to chatMessages
+    const qMessages = query(collection(db, 'chatMessages'), where('region', '==', selectedRoom));
+    const unsubMessages = onSnapshot(qMessages, (snapshot) => {
+      if (snapshot.empty) {
+        // Fallback to mock data for selectedRoom
+        const defaultMsgs = messages.filter(msg => {
+          const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
+          return msgUser?.region === selectedRoom;
+        });
+        setRoomMessages(defaultMsgs);
+      } else {
+        const msgs: ChatMessage[] = [];
+        snapshot.forEach(doc => {
+          msgs.push({ message_id: doc.id, ...doc.data() } as ChatMessage);
+        });
+        // Sort by timestamp asc
+        msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
+        setRoomMessages(msgs);
+      }
+    }, (err) => {
+      console.warn("Firestore messages fetch failed, using fallback: ", err);
+    });
+
+    // Listen to marketItems
+    const qMarket = query(collection(db, 'marketItems'), where('region', '==', selectedRoom));
+    const unsubMarket = onSnapshot(qMarket, (snapshot) => {
+      if (snapshot.empty) {
+        // Fallback to mock data
+        const defaultBio = biologyItems.filter(item => {
+          const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
+          return itemUser?.region === selectedRoom;
+        });
+        const defaultGoods = goodsItems.filter(item => {
+          const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
+          return itemUser?.region === selectedRoom;
+        });
+        setRoomBiologyItems(defaultBio);
+        setRoomGoodsItems(defaultGoods);
+      } else {
+        const bios: MarketItem[] = [];
+        const goods: MarketItem[] = [];
+        snapshot.forEach(doc => {
+          const data = { item_id: doc.id, ...doc.data() } as MarketItem;
+          if (data.category === 'BIOLOGY') {
+            bios.push(data);
+          } else {
+            goods.push(data);
+          }
+        });
+        // Sort by created_at desc (latest first)
+        bios.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        goods.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setRoomBiologyItems(bios);
+        setRoomGoodsItems(goods);
+      }
+    }, (err) => {
+      console.warn("Firestore marketItems fetch failed, using fallback: ", err);
+    });
+
+    return () => {
+      unsubMessages();
+      unsubMarket();
+    };
+  }, [selectedRoom, messages, biologyItems, goodsItems, users, currentUser]);
+
   // Scroll to bottom on messages load
   useEffect(() => {
     if (currentTab === 'all-chat' && chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages, currentTab]);
+  }, [roomMessages, currentTab]);
 
   const handleSendMessage = () => {
     if (!chatText.trim() || !currentUser || !selectedRoom) return;
 
-    const newMsg: ChatMessage = {
-      message_id: 'new_' + Date.now(),
+    const newMsg = {
       user_id: currentUser.user_id,
       type: 'mine',
       content: chatText.trim(),
       time: getCurrentTime(),
+      timestamp: Date.now(),
+      region: selectedRoom
     };
 
-    setMessages(prev => [...prev, newMsg]);
+    addDoc(collection(db, 'chatMessages'), newMsg).catch(err => {
+      console.error("Failed to send message: ", err);
+      showToast('❌ 메시지 전송에 실패했습니다.');
+    });
     setChatText('');
 
     // Simulate Reply (Only in test/demo mode)
@@ -623,27 +702,42 @@ export const MainPage: React.FC = () => {
         const reply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
         if (blockedUsers.includes(reply.user_id)) return; // Don't show from blocked users
 
-        const botMsg: ChatMessage = {
-          message_id: 'reply_' + Date.now(),
+        const botMsg = {
           user_id: reply.user_id,
           type: 'other',
           content: reply.content,
           time: getCurrentTime(),
+          timestamp: Date.now(),
+          region: selectedRoom
         };
-        setMessages(prev => [...prev, botMsg]);
+        addDoc(collection(db, 'chatMessages'), botMsg).catch(err => {
+          console.error("Failed to send mock reply: ", err);
+        });
       }, 1200);
     }
   };
 
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
-    const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
-    setter(prev => prev.map(item => {
-      if (item.item_id === itemId) {
-        return { ...item, status: 'COMPLETED' };
-      }
-      return item;
-    }));
-    showToast('🎉 거래 완료 상태로 변경되었습니다!');
+    // If it's a Firestore item (does not start with 'item_'), update Firestore doc status
+    if (!itemId.startsWith('item_')) {
+      const itemRef = doc(db, 'marketItems', itemId);
+      updateDoc(itemRef, { status: 'COMPLETED' }).then(() => {
+        showToast('🎉 거래 완료 상태로 변경되었습니다!');
+      }).catch(err => {
+        console.error("Failed to update Firestore item status: ", err);
+        showToast('❌ 상태 변경에 실패했습니다.');
+      });
+    } else {
+      // Fallback for mock local items
+      const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
+      setter(prev => prev.map(item => {
+        if (item.item_id === itemId) {
+          return { ...item, status: 'COMPLETED' };
+        }
+        return item;
+      }));
+      showToast('🎉 거래 완료 상태로 변경되었습니다!');
+    }
   };
 
   const triggerFileSelect = () => {
@@ -681,8 +775,7 @@ export const MainPage: React.FC = () => {
     const priceNum = postPrice.trim() ? parseInt(postPrice.replace(/[^0-9]/g, '')) : 0;
     const category = currentTab === 'biology' ? 'BIOLOGY' : 'GOODS';
 
-    const newItem: MarketItem = {
-      item_id: 'item_' + Date.now(),
+    const newItem = {
       user_id: currentUser.user_id,
       category,
       trade_type: postTradeType,
@@ -690,21 +783,26 @@ export const MainPage: React.FC = () => {
       price: priceNum,
       emoji: category === 'BIOLOGY' ? (postTradeType === 'GIVE' ? '🐠' : '🔍') : '⚙️',
       description: postDesc.trim(),
-      image_base64: postImageBase64 || undefined,
+      image_base64: postImageBase64 || null,
       status: 'AVAILABLE',
-      created_at: new Date().toISOString().split('T')[0]
+      created_at: new Date().toISOString().split('T')[0],
+      region: selectedRoom,
+      timestamp: Date.now()
     };
 
-    const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
-    setter(prev => [newItem, ...prev]);
-
-    // Reset Form & Close
-    setPostTitle('');
-    setPostPrice('');
-    setPostDesc('');
-    setPostImageBase64(null);
-    setIsPostModalOpen(false);
-    showToast('✅ 등록되었습니다!');
+    // Add to Firestore
+    addDoc(collection(db, 'marketItems'), newItem).then(() => {
+      // Reset Form & Close
+      setPostTitle('');
+      setPostPrice('');
+      setPostDesc('');
+      setPostImageBase64(null);
+      setIsPostModalOpen(false);
+      showToast('✅ 등록되었습니다!');
+    }).catch(err => {
+      console.error("Failed to create post in Firestore: ", err);
+      showToast('❌ 등록에 실패했습니다.');
+    });
   };
 
   const handleEnterRoom = (roomName: string) => {
@@ -798,23 +896,9 @@ export const MainPage: React.FC = () => {
     }
   };
 
-  const filteredMessages = messages.filter(msg => {
-    const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
-    const isSameRegion = msgUser ? msgUser.region === selectedRoom : true;
-    return !blockedUsers.includes(msg.user_id) && isSameRegion;
-  });
-
-  const filteredBiology = biologyItems.filter(item => {
-    const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
-    const isSameRegion = itemUser ? itemUser.region === selectedRoom : true;
-    return !blockedUsers.includes(item.user_id) && isSameRegion;
-  });
-
-  const filteredGoods = goodsItems.filter(item => {
-    const itemUser = users[item.user_id] || (item.user_id === currentUser?.user_id ? currentUser : null);
-    const isSameRegion = itemUser ? itemUser.region === selectedRoom : true;
-    return !blockedUsers.includes(item.user_id) && isSameRegion;
-  });
+  const filteredMessages = roomMessages.filter(msg => !blockedUsers.includes(msg.user_id));
+  const filteredBiology = roomBiologyItems.filter(item => !blockedUsers.includes(item.user_id));
+  const filteredGoods = roomGoodsItems.filter(item => !blockedUsers.includes(item.user_id));
 
   // Render Lobby if no room is selected
   if (!selectedRoom) {

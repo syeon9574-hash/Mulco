@@ -8,6 +8,9 @@ import {
   mockDmMessages 
 } from '../data/mockData';
 
+import { db } from '../firebase';
+import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
+
 interface ToastInfo {
   id: string;
   message: string;
@@ -58,6 +61,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
   }, []);
+
+  // Listen to users collection on Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const dbUsers: Record<string, User> = {};
+      snapshot.forEach((doc) => {
+        dbUsers[doc.id] = doc.data() as User;
+      });
+      setUsers(prev => ({
+        ...prev,
+        ...dbUsers
+      }));
+    }, (error) => {
+      console.warn("Firestore user sync disabled or failed: ", error);
+    });
+    return () => unsub();
+  }, []);
+
+  // Save current user profile to Firestore
+  useEffect(() => {
+    if (currentUser) {
+      const userRef = doc(db, 'users', currentUser.user_id);
+      setDoc(userRef, currentUser, { merge: true }).catch(err => {
+        console.warn("Failed to sync current user profile to Firestore: ", err);
+      });
+    }
+  }, [currentUser]);
 
   // Synchronize neighbors' regions with current user's region
   useEffect(() => {
