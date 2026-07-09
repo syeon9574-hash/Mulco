@@ -332,6 +332,28 @@ const LobbyLogoutBtn = styled.button`
   cursor: pointer;
 `;
 
+const LobbyHeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const LobbyHeaderBtn = styled.button`
+  background: transparent;
+  border: none;
+  color: ${props => props.theme.colors.text};
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:active {
+    opacity: 0.7;
+  }
+`;
+
 const LobbyContent = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -933,7 +955,14 @@ export const MainPage: React.FC = () => {
       <LobbyWrapper>
         <LobbyHeader>
           <LobbyHeaderTitle>물꼬 동네방 로비</LobbyHeaderTitle>
-          <LobbyLogoutBtn onClick={logout}>로그아웃</LobbyLogoutBtn>
+          <LobbyHeaderActions>
+            <LobbyHeaderBtn onClick={() => navigate(`/profile/${currentUser?.user_id}`)}>
+              <span className="ms" style={{ fontSize: '18px', color: 'var(--point)' }}>account_circle</span>
+              내 프로필
+            </LobbyHeaderBtn>
+            <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>|</span>
+            <LobbyLogoutBtn onClick={logout}>로그아웃</LobbyLogoutBtn>
+          </LobbyHeaderActions>
         </LobbyHeader>
 
         <LobbyContent>

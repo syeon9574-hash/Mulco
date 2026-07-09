@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const PageWrapper = styled.section`
   display: flex;
@@ -163,21 +164,31 @@ export const LoginPage: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      const userData = {
-        user_id: user.uid,
-        nickname: user.displayName || '물집사',
-        email: user.email || '',
-        region: '서울특별시', // 광역 매핑 기본값
-        profile_memo: '안녕하세요! 반갑습니다. 🐟',
-        avatar: user.photoURL || 'images/avatar-girl.png',
-        created_at: new Date().toISOString().split('T')[0]
-      };
+      // Check if user already exists in Firestore
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
 
-      localStorage.setItem('mulco_user', JSON.stringify(userData));
-      setCurrentUser(userData);
-
-      showToast('구글 로그인에 성공했습니다! 🐠');
-      navigate('/setup');
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        localStorage.setItem('mulco_user', JSON.stringify(userData));
+        setCurrentUser(userData as any);
+        showToast('구글 로그인에 성공했습니다! 🐠');
+        navigate('/main');
+      } else {
+        const newUserData = {
+          user_id: user.uid,
+          nickname: user.displayName || '물집사',
+          email: user.email || '',
+          region: '서울특별시', // 광역 매핑 기본값
+          profile_memo: '안녕하세요! 반갑습니다. 🐟',
+          avatar: user.photoURL || 'images/avatar-girl.png',
+          created_at: new Date().toISOString().split('T')[0]
+        };
+        localStorage.setItem('mulco_user', JSON.stringify(newUserData));
+        setCurrentUser(newUserData);
+        showToast('첫 방문을 환영합니다! 프로필을 설정해 주세요. 🐠');
+        navigate('/setup');
+      }
     } catch (error: any) {
       console.error(error);
       showToast('❌ 구글 로그인에 실패했습니다. 파이어베이스 설정을 확인해 주세요.');
@@ -186,23 +197,40 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleTestLogin = () => {
+  const handleTestLogin = async () => {
     setIsLoading(true);
-    const testUser = {
-      user_id: 'test_u001',
-      nickname: '물꼬친구',
-      email: 'test@mulco.com',
-      region: '서울특별시',
-      regions: ['서울특별시'],
-      profile_memo: '테스트 계정입니다. 반갑습니다! 🐠',
-      avatar: 'images/avatar-girl.png',
-      created_at: new Date().toISOString().split('T')[0]
-    };
-    localStorage.setItem('mulco_user', JSON.stringify(testUser));
-    setCurrentUser(testUser);
-    showToast('테스트 계정으로 로그인했습니다! 🐠');
-    navigate('/setup');
-    setIsLoading(false);
+    try {
+      // Check if test user already exists in Firestore
+      const userRef = doc(db, 'users', 'test_u001');
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        localStorage.setItem('mulco_user', JSON.stringify(userData));
+        setCurrentUser(userData as any);
+        showToast('테스트 계정으로 로그인했습니다! 🐠');
+        navigate('/main');
+      } else {
+        const testUser = {
+          user_id: 'test_u001',
+          nickname: '물꼬친구',
+          email: 'test@mulco.com',
+          region: '서울특별시',
+          regions: ['서울특별시'],
+          profile_memo: '테스트 계정입니다. 반갑습니다! 🐠',
+          avatar: 'images/avatar-girl.png',
+          created_at: new Date().toISOString().split('T')[0]
+        };
+        localStorage.setItem('mulco_user', JSON.stringify(testUser));
+        setCurrentUser(testUser);
+        showToast('테스트 계정 프로필 설정을 시작합니다. 🐠');
+        navigate('/setup');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
