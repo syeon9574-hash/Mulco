@@ -144,10 +144,11 @@ const MarketGrid = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 20px 20px 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
   background-color: ${props => props.theme.colors.bg};
+  align-content: start;
 `;
 
 const Fab = styled.button`
