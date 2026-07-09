@@ -921,7 +921,7 @@ export const MainPage: React.FC = () => {
     }
     
     if (userRegions.length >= 2) {
-      showToast('🔒 3개 이상 지역 등록은 프리미엄 멤버십 기능입니다.');
+      showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!');
       return;
     }
     
@@ -1038,7 +1038,7 @@ export const MainPage: React.FC = () => {
               <LobbySectionTitle>내 동네방</LobbySectionTitle>
               <LobbyAddBtn onClick={() => {
                 if (userRegions.length >= 2) {
-                  showToast('🔒 3개 이상 지역 등록은 프리미엄 멤버십 기능입니다.');
+                  showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!');
                 } else {
                   setIsAddRegionModalOpen(true);
                 }
@@ -1064,13 +1064,7 @@ export const MainPage: React.FC = () => {
               );
             })}
 
-            <LockCard onClick={() => {
-              if (currentUser?.user_id.startsWith('test_')) {
-                showToast('🔒 프리미엄 멤버십을 결제하시면 3개 이상의 동네를 제한 없이 설정할 수 있습니다! (추후 제공 예정)');
-              } else {
-                showToast('🔒 프리미엄 멤버십 전용 기능입니다. 멤버십을 구독하고 제한 없이 동네방에 참여해 보세요.');
-              }
-            }}>
+            <LockCard onClick={() => showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!')}>
               <LockDetails>
                 <RoomIcon style={{ backgroundColor: '#FFF9E6' }}>🔒</RoomIcon>
                 <LockText>
