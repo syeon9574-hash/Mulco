@@ -376,6 +376,7 @@ export const ProfilePage: React.FC = () => {
   const [editNickname, setEditNickname] = useState('');
   const [editMemo, setEditMemo] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
+  const [reportCount, setReportCount] = useState<number>(0);
 
   const targetUser = userId === currentUser?.user_id ? currentUser : users[userId || ''];
 
@@ -384,6 +385,24 @@ export const ProfilePage: React.FC = () => {
       navigate('/main');
     }
   }, [targetUser, navigate]);
+
+  // Fetch report history count from Firestore
+  useEffect(() => {
+    if (!targetUser) return;
+    const q = query(
+      collection(db, 'reports'),
+      where('reported_user_id', '==', targetUser.user_id)
+    );
+    getDocs(q).then(snapshot => {
+      const reporters = new Set();
+      snapshot.forEach(doc => {
+        reporters.add(doc.data().reporter_id);
+      });
+      setReportCount(reporters.size);
+    }).catch(err => {
+      console.warn("Failed to fetch reports count: ", err);
+    });
+  }, [targetUser]);
 
   // Sync profile edit states when targetUser changes or edit BottomSheet opens
   useEffect(() => {
@@ -588,7 +607,32 @@ export const ProfilePage: React.FC = () => {
             targetUser.avatar_letter || targetUser.nickname.charAt(0)
           )}
         </ProfileAvatar>
-        <ProfileName>{targetUser.nickname}</ProfileName>
+        <ProfileName>
+          {targetUser.nickname}
+          {targetUser.status === 'BANNED' && (
+            <span style={{ fontSize: '0.74rem', color: 'var(--white)', backgroundColor: 'var(--danger)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px', fontWeight: '700' }}>
+              영구 차단됨
+            </span>
+          )}
+        </ProfileName>
+        {reportCount > 0 && (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: '#FFEAEA',
+            color: '#FF4D4D',
+            fontSize: '0.74rem',
+            fontWeight: '700',
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            marginTop: '2px',
+            border: '1.5px solid #FFAAAA'
+          }}>
+            <span className="ms" style={{ fontSize: '14px', color: '#FF4D4D' }}>warning</span>
+            신고 이력 있음 (누적 {reportCount}회)
+          </div>
+        )}
         <ProfileRegion>
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
