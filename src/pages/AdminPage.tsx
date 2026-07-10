@@ -18,6 +18,14 @@ interface Report {
   timestamp: number;
 }
 
+interface Suggestion {
+  suggestion_id: string;
+  user_id: string;
+  user_nickname: string;
+  content: string;
+  timestamp: number;
+}
+
 const PageWrapper = styled.section`
   display: flex;
   flex-direction: column;
@@ -89,10 +97,14 @@ const SummaryItem = styled.div`
   gap: 4px;
 `;
 
-const SummaryVal = styled.span<{ $red?: boolean }>`
+const SummaryVal = styled.span<{ $red?: boolean; $blue?: boolean }>`
   font-size: 1.4rem;
   font-weight: 800;
-  color: ${props => props.$red ? '#e74c3c' : props.theme.colors.point};
+  color: ${props => {
+    if (props.$red) return '#e74c3c';
+    if (props.$blue) return '#3498db';
+    return props.theme.colors.point;
+  }};
 `;
 
 const SummaryLabel = styled.span`
@@ -100,11 +112,34 @@ const SummaryLabel = styled.span`
   color: ${props => props.theme.colors.textLight};
 `;
 
-const ReportListTitle = styled.h2`
-  font-size: 1rem;
+const TabBar = styled.div`
+  display: flex;
+  background: white;
+  border-radius: ${props => props.theme.borderRadius.md};
+  padding: 4px;
+  box-shadow: ${props => props.theme.shadows.sm};
+  border: 1px solid rgba(0,0,0,0.03);
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  border: none;
+  background: ${props => props.$active ? props.theme.colors.point : 'transparent'};
+  color: ${props => props.$active ? 'white' : props.theme.colors.textLight};
   font-weight: 700;
-  color: ${props => props.theme.colors.text};
-  margin: 10px 0 2px;
+  font-size: 0.85rem;
+  padding: 12px;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  &:hover {
+    background: ${props => props.$active ? props.theme.colors.point : '#f8f9fa'};
+  }
 `;
 
 const EmptyState = styled.div`
@@ -119,6 +154,13 @@ const EmptyState = styled.div`
   border-radius: ${props => props.theme.borderRadius.lg};
   border: 1.5px dashed ${props => props.theme.colors.muted};
   color: ${props => props.theme.colors.textLight};
+`;
+
+const ReportListTitle = styled.h2`
+  font-size: 1rem;
+  font-weight: 700;
+  color: ${props => props.theme.colors.text};
+  margin: 10px 0 2px;
 `;
 
 const ReportCard = styled.div`
@@ -145,6 +187,29 @@ const ReportCard = styled.div`
   }
 `;
 
+const SuggestionCard = styled.div`
+  background: white;
+  border-radius: ${props => props.theme.borderRadius.lg};
+  padding: 16px;
+  box-shadow: ${props => props.theme.shadows.sm};
+  border: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: #3498db;
+  }
+`;
+
 const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -155,6 +220,14 @@ const CardHeader = styled.div`
 const RegionBadge = styled.span`
   background: #f1f2f6;
   color: #2f3542;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+`;
+
+const SuggestionBadge = styled.span`
+  background: #e8f4fd;
+  color: #3498db;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;
@@ -173,6 +246,18 @@ const ReportedContent = styled.div`
   line-height: 1.45;
   color: ${props => props.theme.colors.text};
   word-break: break-all;
+`;
+
+const SuggestionContent = styled.div`
+  background: #fcfcfc;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  padding: 14px;
+  border: 1px solid rgba(52, 152, 219, 0.15);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: ${props => props.theme.colors.text};
+  word-break: break-all;
+  white-space: pre-wrap;
 `;
 
 const ReportMeta = styled.div`
@@ -216,7 +301,13 @@ const ActionRow = styled.div`
   }
 `;
 
-const ActionBtn = styled.button<{ $type: 'dismiss' | 'delete' | 'ban' }>`
+const SuggestionActionRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+`;
+
+const ActionBtn = styled.button<{ $type: 'dismiss' | 'delete' | 'ban' | 'resolve' }>`
   border: none;
   border-radius: ${props => props.theme.borderRadius.md};
   padding: 10px 4px;
@@ -232,12 +323,14 @@ const ActionBtn = styled.button<{ $type: 'dismiss' | 'delete' | 'ban' }>`
   background-color: ${props => {
     if (props.$type === 'dismiss') return '#f1f2f6';
     if (props.$type === 'delete') return '#ffe9eb';
+    if (props.$type === 'resolve') return '#e8f4fd';
     return '#2c3e50';
   }};
 
   color: ${props => {
     if (props.$type === 'dismiss') return '#57606f';
     if (props.$type === 'delete') return '#e74c3c';
+    if (props.$type === 'resolve') return '#3498db';
     return 'white';
   }};
 
@@ -255,6 +348,8 @@ export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, showToast, users } = useApp();
   const [reports, setReports] = useState<Report[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [activeTab, setActiveTab] = useState<'reports' | 'suggestions'>('reports');
   const [isLoading, setIsLoading] = useState(true);
 
   // Redirect if not admin
@@ -280,6 +375,24 @@ export const AdminPage: React.FC = () => {
     }, (err) => {
       console.error(err);
       setIsLoading(false);
+    });
+
+    return () => unsub();
+  }, [currentUser]);
+
+  // Real-time suggestions query
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'admin') return;
+
+    const q = query(collection(db, 'suggestions'), orderBy('timestamp', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const items: Suggestion[] = [];
+      snapshot.forEach((doc) => {
+        items.push({ suggestion_id: doc.id, ...doc.data() } as Suggestion);
+      });
+      setSuggestions(items);
+    }, (err) => {
+      console.error('Suggestions fetch error:', err);
     });
 
     return () => unsub();
@@ -336,6 +449,19 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  // Clear suggestion
+  const handleResolveSuggestion = async (suggestionId: string) => {
+    if (window.confirm('💡 이 건의사항을 확인 완료 처리하고 목록에서 삭제하시겠습니까?')) {
+      try {
+        await deleteDoc(doc(db, 'suggestions', suggestionId));
+        showToast('✅ 건의사항 확인을 완료했습니다.');
+      } catch (err) {
+        console.error(err);
+        showToast('❌ 처리에 실패했습니다.');
+      }
+    }
+  };
+
   const getFormatDate = (ts: number) => {
     const d = new Date(ts);
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -362,6 +488,10 @@ export const AdminPage: React.FC = () => {
             <SummaryLabel>접수된 신고</SummaryLabel>
           </SummaryItem>
           <SummaryItem>
+            <SummaryVal $blue={suggestions.length > 0} $red={false}>{suggestions.length}</SummaryVal>
+            <SummaryLabel>새 건의사항</SummaryLabel>
+          </SummaryItem>
+          <SummaryItem>
             <SummaryVal>{Object.values(users).length}</SummaryVal>
             <SummaryLabel>가입 집사 수</SummaryLabel>
           </SummaryItem>
@@ -371,68 +501,127 @@ export const AdminPage: React.FC = () => {
           </SummaryItem>
         </SummaryBar>
 
-        <ReportListTitle>실시간 신고 내역</ReportListTitle>
+        <TabBar>
+          <TabButton $active={activeTab === 'reports'} onClick={() => setActiveTab('reports')}>
+            <span className="ms" style={{ fontSize: '16px' }}>gavel</span>
+            신고 내역 ({reports.length})
+          </TabButton>
+          <TabButton $active={activeTab === 'suggestions'} onClick={() => setActiveTab('suggestions')}>
+            <span className="ms" style={{ fontSize: '16px' }}>lightbulb</span>
+            건의사항 ({suggestions.length})
+          </TabButton>
+        </TabBar>
 
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)' }}>
-            신고 목록을 가져오는 중입니다...
-          </div>
-        ) : reports.length === 0 ? (
-          <EmptyState>
-            <span className="ms" style={{ fontSize: '48px', color: 'var(--muted)' }}>check_circle</span>
-            <p style={{ margin: 0, fontWeight: 600 }}>접수된 대기 신고가 없습니다.</p>
-            <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.8 }}>동네 물집사 커뮤니티가 평화롭습니다! 🌿</p>
-          </EmptyState>
+        {activeTab === 'reports' ? (
+          /* ================== 신고 관리 탭 ================== */
+          <>
+            <ReportListTitle>실시간 신고 내역</ReportListTitle>
+            {isLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)' }}>
+                신고 목록을 가져오는 중입니다...
+              </div>
+            ) : reports.length === 0 ? (
+              <EmptyState>
+                <span className="ms" style={{ fontSize: '48px', color: 'var(--muted)' }}>check_circle</span>
+                <p style={{ margin: 0, fontWeight: 600 }}>접수된 대기 신고가 없습니다.</p>
+                <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.8 }}>동네 물집사 커뮤니티가 평화롭습니다! 🌿</p>
+              </EmptyState>
+            ) : (
+              reports.map((report) => (
+                <ReportCard key={report.report_id}>
+                  <CardHeader>
+                    <RegionBadge>{report.region}</RegionBadge>
+                    <TimeLabel>{getFormatDate(report.timestamp)}</TimeLabel>
+                  </CardHeader>
+
+                  <ReportedContent>
+                    {report.message_content}
+                  </ReportedContent>
+
+                  <ReportMeta>
+                    <MetaRow>
+                      <MetaLabel>신고 사유</MetaLabel>
+                      <MetaVal><ReasonTag>{report.reason}</ReasonTag></MetaVal>
+                    </MetaRow>
+                    <MetaRow>
+                      <MetaLabel>대상자</MetaLabel>
+                      <MetaVal>
+                        {report.reported_nickname || users[report.reported_user_id]?.nickname || '알 수 없음'} 
+                        <span style={{ fontSize: '0.7rem', color: '#8c8c8c', marginLeft: '6px', fontWeight: 400 }}>
+                          (ID: {report.reported_user_id.slice(0, 8)})
+                        </span>
+                      </MetaVal>
+                    </MetaRow>
+                    <MetaRow>
+                      <MetaLabel>신고자</MetaLabel>
+                      <MetaVal>
+                        {report.reporter_nickname || users[report.reporter_id]?.nickname || '알 수 없음'}
+                      </MetaVal>
+                    </MetaRow>
+                  </ReportMeta>
+
+                  <ActionRow>
+                    <ActionBtn $type="dismiss" onClick={() => handleDismiss(report.report_id)}>
+                      <span className="ms" style={{ fontSize: '15px' }}>cancel</span>
+                      반려
+                    </ActionBtn>
+                    <ActionBtn $type="delete" onClick={() => handleDeleteMsg(report.report_id, report.message_id)}>
+                      <span className="ms" style={{ fontSize: '15px' }}>delete_forever</span>
+                      메시지 삭제
+                    </ActionBtn>
+                    <ActionBtn $type="ban" onClick={() => handleBanUser(report.report_id, report.reported_user_id, report.message_id)}>
+                      <span className="ms" style={{ fontSize: '15px' }}>block</span>
+                      가해자 정지
+                    </ActionBtn>
+                  </ActionRow>
+                </ReportCard>
+              ))
+            )}
+          </>
         ) : (
-          reports.map((report) => (
-            <ReportCard key={report.report_id}>
-              <CardHeader>
-                <RegionBadge>{report.region}</RegionBadge>
-                <TimeLabel>{getFormatDate(report.timestamp)}</TimeLabel>
-              </CardHeader>
+          /* ================== 건의사항 관리 탭 ================== */
+          <>
+            <ReportListTitle>유저 개선 제안 및 피드백</ReportListTitle>
+            {suggestions.length === 0 ? (
+              <EmptyState>
+                <span className="ms" style={{ fontSize: '48px', color: 'var(--muted)' }}>sentiment_satisfied</span>
+                <p style={{ margin: 0, fontWeight: 600 }}>새로 등록된 건의사항이 없습니다.</p>
+                <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.8 }}>유저들이 현재 서비스에 만족하고 있습니다! 🐠</p>
+              </EmptyState>
+            ) : (
+              suggestions.map((sug) => (
+                <SuggestionCard key={sug.suggestion_id}>
+                  <CardHeader>
+                    <SuggestionBadge>💡 피드백</SuggestionBadge>
+                    <TimeLabel>{getFormatDate(sug.timestamp)}</TimeLabel>
+                  </CardHeader>
 
-              <ReportedContent>
-                {report.message_content}
-              </ReportedContent>
+                  <SuggestionContent>
+                    {sug.content}
+                  </SuggestionContent>
 
-              <ReportMeta>
-                <MetaRow>
-                  <MetaLabel>신고 사유</MetaLabel>
-                  <MetaVal><ReasonTag>{report.reason}</ReasonTag></MetaVal>
-                </MetaRow>
-                <MetaRow>
-                  <MetaLabel>대상자</MetaLabel>
-                  <MetaVal>
-                    {report.reported_nickname || users[report.reported_user_id]?.nickname || '알 수 없음'} 
-                    <span style={{ fontSize: '0.7rem', color: '#8c8c8c', marginLeft: '6px', fontWeight: 400 }}>
-                      (ID: {report.reported_user_id.slice(0, 8)})
-                    </span>
-                  </MetaVal>
-                </MetaRow>
-                <MetaRow>
-                  <MetaLabel>신고자</MetaLabel>
-                  <MetaVal>
-                    {report.reporter_nickname || users[report.reporter_id]?.nickname || '알 수 없음'}
-                  </MetaVal>
-                </MetaRow>
-              </ReportMeta>
+                  <ReportMeta>
+                    <MetaRow>
+                      <MetaLabel>제보자</MetaLabel>
+                      <MetaVal>
+                        {sug.user_nickname || users[sug.user_id]?.nickname || '익명 집사'}
+                        <span style={{ fontSize: '0.7rem', color: '#8c8c8c', marginLeft: '6px', fontWeight: 400 }}>
+                          (ID: {sug.user_id.slice(0, 8)})
+                        </span>
+                      </MetaVal>
+                    </MetaRow>
+                  </ReportMeta>
 
-              <ActionRow>
-                <ActionBtn $type="dismiss" onClick={() => handleDismiss(report.report_id)}>
-                  <span className="ms" style={{ fontSize: '15px' }}>cancel</span>
-                  반려
-                </ActionBtn>
-                <ActionBtn $type="delete" onClick={() => handleDeleteMsg(report.report_id, report.message_id)}>
-                  <span className="ms" style={{ fontSize: '15px' }}>delete_forever</span>
-                  메시지 삭제
-                </ActionBtn>
-                <ActionBtn $type="ban" onClick={() => handleBanUser(report.report_id, report.reported_user_id, report.message_id)}>
-                  <span className="ms" style={{ fontSize: '15px' }}>block</span>
-                  가해자 정지
-                </ActionBtn>
-              </ActionRow>
-            </ReportCard>
-          ))
+                  <SuggestionActionRow>
+                    <ActionBtn $type="resolve" onClick={() => handleResolveSuggestion(sug.suggestion_id)} style={{ width: '120px' }}>
+                      <span className="ms" style={{ fontSize: '15px' }}>check_circle</span>
+                      확인 완료
+                    </ActionBtn>
+                  </SuggestionActionRow>
+                </SuggestionCard>
+              ))
+            )}
+          </>
         )}
       </DashboardContent>
     </PageWrapper>

@@ -956,6 +956,8 @@ export const MainPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isPhotoOptionOpen, setIsPhotoOptionOpen] = useState(false);
+  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
+  const [suggestionText, setSuggestionText] = useState('');
 
   // Post form states
   const [postTradeType, setPostTradeType] = useState<'GIVE' | 'TAKE'>('GIVE');
@@ -1172,6 +1174,24 @@ export const MainPage: React.FC = () => {
         showToast('🗑️ 테스트 메시지가 삭제되었습니다.');
       }
     }
+  };
+
+  const handleSendSuggestion = () => {
+    if (!suggestionText.trim() || !currentUser) return;
+    
+    addDoc(collection(db, 'suggestions'), {
+      user_id: currentUser.user_id,
+      user_nickname: currentUser.nickname,
+      content: suggestionText.trim(),
+      timestamp: Date.now()
+    }).then(() => {
+      showToast('💡 건의사항이 전송되었습니다. 소중한 의견 감사합니다!');
+      setIsSuggestionOpen(false);
+      setSuggestionText('');
+    }).catch(err => {
+      console.error(err);
+      showToast('❌ 전송에 실패했습니다.');
+    });
   };
 
   const handleReportMessage = (msg: ChatMessage) => {
@@ -1833,6 +1853,9 @@ export const MainPage: React.FC = () => {
         <MenuItem onClick={() => { setIsMenuOpen(false); navigate(`/profile/${currentUser?.user_id}`); }}>
           <span className="ms">person</span> 내 프로필 보기
         </MenuItem>
+        <MenuItem onClick={() => { setIsMenuOpen(false); setIsSuggestionOpen(true); }}>
+          <span className="ms">lightbulb</span> 건의사항 보내기
+        </MenuItem>
         <MenuItem onClick={() => { setIsMenuOpen(false); logout(); }}>
           <span className="ms">logout</span> 로그아웃
         </MenuItem>
@@ -1968,6 +1991,30 @@ export const MainPage: React.FC = () => {
           style={{ display: 'none' }} 
           onChange={handleImageChange} 
         />
+      </BottomSheet>
+
+      {/* Suggestion BottomSheet */}
+      <BottomSheet 
+        isOpen={isSuggestionOpen} 
+        onClose={() => { setIsSuggestionOpen(false); setSuggestionText(''); }} 
+        title="💡 건의사항 보내기"
+      >
+        <InputGroup>
+          <Label>보내실 의견 (제안 / 버그 제보 등)</Label>
+          <ModalTextarea 
+            placeholder="물꼬를 사용하시면서 느낀 건의사항이나 개선 제안, 발견한 버그가 있다면 편하게 남겨주세요. 🐠"
+            value={suggestionText}
+            onChange={e => setSuggestionText(e.target.value)}
+            style={{ height: '140px' }}
+          />
+        </InputGroup>
+        <PrimaryBtn 
+          onClick={handleSendSuggestion}
+          disabled={!suggestionText.trim()}
+          style={{ marginTop: '16px' }}
+        >
+          제출하기
+        </PrimaryBtn>
       </BottomSheet>
     </Container>
   );
