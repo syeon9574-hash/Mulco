@@ -1416,18 +1416,20 @@ export const MainPage: React.FC = () => {
             <LobbySectionTitle>인기 동네방 둘러보기</LobbySectionTitle>
             {popularRooms.map((room, idx) => {
               const isRegistered = userRegions.includes(room.name);
+              const isAdmin = currentUser?.role === 'admin';
+              const canEnter = isRegistered || isAdmin;
               const actualCount = Object.values(users).filter(u => u.region.includes(room.name) || room.name.includes(u.region)).length;
               return (
                 <RoomCard 
                   key={idx} 
                   onClick={() => {
-                    if (isRegistered) {
+                    if (canEnter) {
                       handleEnterRoom(room.name);
                     } else {
                       showToast(`💡 이 방에 참여하려면 '내 동네 추가하기'로 먼저 등록해 주세요!`);
                     }
                   }}
-                  style={{ opacity: isRegistered ? 1 : 0.7 }}
+                  style={{ opacity: canEnter ? 1 : 0.7 }}
                 >
                   <RoomDetails>
                     <RoomIcon>{room.emoji}</RoomIcon>
@@ -1438,6 +1440,8 @@ export const MainPage: React.FC = () => {
                   </RoomDetails>
                   {isRegistered ? (
                     <EnterArrow>입장 →</EnterArrow>
+                  ) : isAdmin ? (
+                    <EnterArrow style={{ color: '#e74c3c' }}>관리 입장 →</EnterArrow>
                   ) : (
                     <span className="ms" style={{ fontSize: '18px', color: '#E0E0DB' }}>add_circle</span>
                   )}
