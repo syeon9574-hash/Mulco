@@ -1384,11 +1384,8 @@ export const MainPage: React.FC = () => {
       normalizeRegionToRoom(u.region) === roomName
     );
 
-    // 2. 어드민(나)은 모든 방에 상주하므로 +1
-    const hasAdmin = Object.values(users).some(u => u.role === 'admin') || currentUser?.role === 'admin';
-    const adminOffset = hasAdmin ? 1 : 0;
-
-    return realUsersInRoom.length + adminOffset;
+    // 2. 어드민은 모든 방에 상시 상주하므로 무조건 기본 +1명부터 시작
+    return realUsersInRoom.length + 1;
   };
 
   const filteredMessages = roomMessages.filter(msg => {
