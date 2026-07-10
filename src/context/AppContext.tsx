@@ -6,7 +6,7 @@ import {
   mockDmMessages 
 } from '../data/mockData';
 
-import { db } from '../firebase';
+import { db, requestNotificationPermission } from '../firebase';
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 interface ToastInfo {
@@ -86,6 +86,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
   }, [currentUser]);
+
+  // Request FCM Notification Permission and register token
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const setupNotifications = async () => {
+      try {
+        // VAPID_KEY: Firebase Console -> Project Settings -> Cloud Messaging -> Web Push certificates
+        const VAPID_KEY = "BHzG2e-xGqH7-G38G-YOUR-VAPID-PUBLIC-KEY-HERE"; 
+        const token = await requestNotificationPermission(VAPID_KEY);
+        
+        if (token && currentUser.fcmToken !== token) {
+          const updatedUser = { ...currentUser, fcmToken: token };
+          setCurrentUser(updatedUser);
+          localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
+        }
+      } catch (e) {
+        console.warn('FCM registration deferred/failed:', e);
+      }
+    };
+
+    const timer = setTimeout(setupNotifications, 3500);
+    return () => clearTimeout(timer);
+  }, [currentUser?.user_id]);
 
   // Synchronize neighbors' regions with current user's region
   useEffect(() => {

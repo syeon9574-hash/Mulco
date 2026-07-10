@@ -11,6 +11,7 @@ export interface User {
   reviews?: Record<string, number>;
   status?: 'ACTIVE' | 'BANNED';
   role?: 'user' | 'admin';
+  fcmToken?: string;
 }
 
 export interface ChatRoom {

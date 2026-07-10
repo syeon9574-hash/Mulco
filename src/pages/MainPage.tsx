@@ -1020,10 +1020,12 @@ export const MainPage: React.FC = () => {
   const handleSendMessage = () => {
     if (!chatText.trim() || !currentUser || !selectedRoom) return;
 
+    const messageText = chatText.trim();
+
     const newMsg = {
       user_id: currentUser.user_id,
       type: 'mine',
-      content: chatText.trim(),
+      content: messageText,
       time: getCurrentTime(),
       timestamp: Date.now(),
       region: selectedRoom
@@ -1034,6 +1036,34 @@ export const MainPage: React.FC = () => {
       showToast('❌ 메시지 전송에 실패했습니다.');
     });
     setChatText('');
+
+    // 같은 동네방에 있고 푸시 토큰이 등록된 다른 이웃 사용자들에게 백그라운드 푸시 알림 발송
+    const otherUsersInRoom = Object.values(users).filter(u => 
+      u.user_id !== currentUser.user_id && 
+      (u.region === selectedRoom || (u.regions && u.regions.includes(selectedRoom))) &&
+      u.fcmToken
+    );
+
+    otherUsersInRoom.forEach(user => {
+      if (user.fcmToken) {
+        fetch('/api/send-push', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: user.fcmToken,
+            title: `[${selectedRoom}] ${currentUser.nickname}`,
+            body: messageText,
+            dataPayload: {
+              region: selectedRoom
+            }
+          })
+        }).catch(e => {
+          console.warn('Failed to send push notification to user:', user.user_id, e);
+        });
+      }
+    });
 
     // Simulate Reply (Only in test/demo mode)
     if (currentUser.user_id.startsWith('test_')) {
