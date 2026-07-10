@@ -239,7 +239,7 @@ export const LoginPage: React.FC = () => {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
 
-      const isDeveloper = user.email === 'syeon9574@gmail.com' || user.email?.startsWith('syeon9574');
+      const isDeveloper = user.email === 'syeon9574@gmail.com' || user.email?.startsWith('syeon9574') || userSnap.data()?.role === 'admin';
 
       if (isDeveloper) {
         const userData = userSnap.exists()
@@ -303,11 +303,19 @@ export const LoginPage: React.FC = () => {
             regions: ['서울특별시'],
             profile_memo: '테스트 계정입니다. 반갑습니다! 🐠',
             avatar: 'images/avatar-girl.png',
-            created_at: new Date().toISOString().split('T')[0]
+            created_at: new Date().toISOString().split('T')[0],
+            role: 'user'
           };
       
-      setTempUser(userData);
-      setShowRoleSelector(true);
+      const finalUser = {
+        ...userData,
+        role: 'user'
+      } as any;
+      
+      localStorage.setItem('mulco_user', JSON.stringify(finalUser));
+      setCurrentUser(finalUser);
+      showToast('데모 테스트 계정으로 로그인했습니다! 🐠');
+      navigate('/main');
     } catch (error) {
       console.error(error);
     } finally {
