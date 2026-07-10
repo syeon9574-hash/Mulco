@@ -1376,6 +1376,21 @@ export const MainPage: React.FC = () => {
 
   const currentRoomHost = getRoomHost();
 
+  const getRoomMemberCount = (roomName: string): number => {
+    // 1. 해당 방에 가입된 실제 유저 (Mock 유저 및 어드민 제외)
+    const realUsersInRoom = Object.values(users).filter(u => 
+      !u.user_id.startsWith('u00') && // mockData의 데모 유저 제외
+      u.role !== 'admin' &&           // 어드민 계정 제외
+      normalizeRegionToRoom(u.region) === roomName
+    );
+
+    // 2. 어드민(나)은 모든 방에 상주하므로 +1
+    const hasAdmin = Object.values(users).some(u => u.role === 'admin') || currentUser?.role === 'admin';
+    const adminOffset = hasAdmin ? 1 : 0;
+
+    return realUsersInRoom.length + adminOffset;
+  };
+
   const filteredMessages = roomMessages.filter(msg => {
     const isBlocked = blockedUsers.includes(msg.user_id);
     const msgUser = users[msg.user_id];
@@ -1448,7 +1463,7 @@ export const MainPage: React.FC = () => {
 
               {ALL_ADMIN_ROOMS.map((room, idx) => {
                 // 어드민 상주 카운트(+1)가 포함된 접속자 수 계산
-                const actualCount = Object.values(users).filter(u => u.region === room.name || u.role === 'admin').length;
+                const actualCount = getRoomMemberCount(room.name);
                 return (
                   <RoomCard key={idx} registered onClick={() => handleEnterRoom(room.name)}>
                     <RoomDetails>
@@ -1483,7 +1498,7 @@ export const MainPage: React.FC = () => {
 
                 {userRegions.map((regionName, idx) => {
                   // 일반 유저용 어드민 포함 카운트
-                  const actualCount = Object.values(users).filter(u => u.region === regionName || u.role === 'admin').length;
+                  const actualCount = getRoomMemberCount(regionName);
                   return (
                     <RoomCard key={idx} registered onClick={() => handleEnterRoom(regionName)}>
                       <RoomDetails>
@@ -1516,7 +1531,7 @@ export const MainPage: React.FC = () => {
                 {popularRooms.map((room, idx) => {
                   const isRegistered = userRegions.includes(room.name);
                   const canEnter = isRegistered;
-                  const actualCount = Object.values(users).filter(u => u.region.includes(room.name) || room.name.includes(u.region) || u.role === 'admin').length;
+                  const actualCount = getRoomMemberCount(room.name);
                   return (
                     <RoomCard 
                       key={idx} 
