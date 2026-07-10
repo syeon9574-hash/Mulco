@@ -9,7 +9,7 @@ import { MarketCard } from '../components/chat/MarketCard';
 import { MarketItem, ChatMessage } from '../types';
 import { getCurrentTime, resizeAndCompressImage } from '../utils/format';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
 import { AdBanner } from '../components/common/AdBanner';
 
 const Container = styled.div`
@@ -1068,8 +1068,17 @@ export const MainPage: React.FC = () => {
 
   const handleSendMessage = () => {
     if (!chatText.trim() || !currentUser || !selectedRoom) return;
-
+ 
     const messageText = chatText.trim();
+
+    // 🤖 자동 금지어 / 스팸 키워드 필터링 (사장님 제로 노동용)
+    const SPAM_KEYWORDS = ['카지노', '바카라', '토토', '고수익알바', '조건만남', '대출', '성인광고', 'sex', '바다이야기'];
+    const hasSpam = SPAM_KEYWORDS.some(keyword => messageText.toLowerCase().includes(keyword));
+    
+    if (hasSpam) {
+      showToast('🚫 스팸 방지: 부적절한 단어가 포함되어 있어 전송할 수 없습니다.');
+      return;
+    }
 
     const newMsg = {
       user_id: currentUser.user_id,
@@ -1179,7 +1188,14 @@ export const MainPage: React.FC = () => {
       reason: reasonText,
       timestamp: Date.now()
     }).then(() => {
-      showToast('🚨 신고가 접수되었습니다. 어드민이 확인 후 즉시 조치합니다.');
+      // 메시지 문서 자체의 누적 신고 수(reportCount)를 Firestore 상에서 1 증가시킴
+      if (!msg.message_id.startsWith('msg_')) {
+        const msgRef = doc(db, 'chatMessages', msg.message_id);
+        updateDoc(msgRef, {
+          reportCount: increment(1)
+        }).catch(err => console.warn('Failed to increment report count:', err));
+      }
+      showToast('🚨 신고가 접수되었습니다. 3회 이상 신고 누적 시 자동 블라인드 처리됩니다.');
     }).catch(err => {
       console.error(err);
       showToast('❌ 신고 접수에 실패했습니다.');
@@ -1388,7 +1404,9 @@ export const MainPage: React.FC = () => {
     const isBlocked = blockedUsers.includes(msg.user_id);
     const msgUser = users[msg.user_id];
     const isBanned = msgUser?.status === 'BANNED';
-    return !isBlocked && !isBanned;
+    // 3회 이상 신고 누적된 메시지는 유저 화면에서 즉시 자동 블라인드(숨김) 처리
+    const isBlinded = msg.reportCount && msg.reportCount >= 3;
+    return !isBlocked && !isBanned && !isBlinded;
   });
   const filteredBiology = roomBiologyItems.filter(item => {
     const isBlocked = blockedUsers.includes(item.user_id);

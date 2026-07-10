@@ -27,6 +27,7 @@ export interface ChatMessage {
   type: 'mine' | 'other' | 'system';
   content: string;
   time: string;
+  reportCount?: number;
 }
 
 export interface MarketItem {
