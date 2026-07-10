@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
 import { auth, db } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
 const PageWrapper = styled.section`
@@ -225,63 +225,102 @@ export const LoginPage: React.FC = () => {
     const saved = localStorage.getItem('mulco_user');
     if (saved) {
       navigate('/main');
+      return;
     }
+
+    // PC 브라우저용 리다이렉트 로그인 결과 확인
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          setIsLoading(true);
+          await handleLoginSuccess(result.user);
+        }
+      } catch (error: any) {
+        console.error('Redirect sign-in error:', error);
+        if (error.code !== 'auth/redirect-cancelled') {
+          showToast('❌ 로그인 처리 중 문제가 발생했습니다.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkRedirectResult();
   }, [navigate]);
+
+  const handleLoginSuccess = async (user: any) => {
+    // Check if user already exists in Firestore
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists() && userSnap.data()?.status === 'BANNED') {
+      showToast('🚫 이 계정은 커뮤니티 정책 위반으로 영구 정지되었습니다.');
+      return;
+    }
+
+    const isDeveloper = user.email === 'syeon9574@gmail.com' || user.email?.startsWith('syeon9574') || userSnap.data()?.role === 'admin';
+
+    if (isDeveloper) {
+      const userData = userSnap.exists()
+        ? userSnap.data()
+        : {
+            user_id: user.uid,
+            nickname: user.displayName || '성수연',
+            email: user.email || '',
+            region: '서울특별시',
+            profile_memo: '물꼬 최고 개발자이자 총운영자입니다. 👑',
+            avatar: user.photoURL || 'images/avatar-girl.png',
+            created_at: new Date().toISOString().split('T')[0]
+          };
+      setTempUser(userData);
+      setShowRoleSelector(true);
+    } else {
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        localStorage.setItem('mulco_user', JSON.stringify(userData));
+        setCurrentUser(userData as any);
+        showToast('구글 로그인에 성공했습니다! 🐠');
+        navigate('/main');
+      } else {
+        const newUserData = {
+          user_id: user.uid,
+          nickname: user.displayName || '물집사',
+          email: user.email || '',
+          region: '서울특별시', // 광역 매핑 기본값
+          profile_memo: '안녕하세요! 반갑습니다. 🐟',
+          avatar: user.photoURL || 'images/avatar-girl.png',
+          created_at: new Date().toISOString().split('T')[0]
+        };
+        localStorage.setItem('mulco_user', JSON.stringify(newUserData));
+        setCurrentUser(newUserData);
+        showToast('첫 방문을 환영합니다! 프로필을 설정해 주세요. 🐠');
+        navigate('/setup');
+      }
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
       
-      // Check if user already exists in Firestore
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists() && userSnap.data()?.status === 'BANNED') {
-        showToast('🚫 이 계정은 커뮤니티 정책 위반으로 영구 정지되었습니다.');
-        setIsLoading(false);
-        return;
-      }
-
-      const isDeveloper = user.email === 'syeon9574@gmail.com' || user.email?.startsWith('syeon9574') || userSnap.data()?.role === 'admin';
-
-      if (isDeveloper) {
-        const userData = userSnap.exists()
-          ? userSnap.data()
-          : {
-              user_id: user.uid,
-              nickname: user.displayName || '성수연',
-              email: user.email || '',
-              region: '서울특별시',
-              profile_memo: '물꼬 최고 개발자이자 총운영자입니다. 👑',
-              avatar: user.photoURL || 'images/avatar-girl.png',
-              created_at: new Date().toISOString().split('T')[0]
-            };
-        setTempUser(userData);
-        setShowRoleSelector(true);
-      } else {
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          localStorage.setItem('mulco_user', JSON.stringify(userData));
-          setCurrentUser(userData as any);
-          showToast('구글 로그인에 성공했습니다! 🐠');
-          navigate('/main');
+      // 1. 팝업 방식 시도 (일반적인 크롬/엣지 PC)
+      try {
+        const result = await signInWithPopup(auth, provider);
+        await handleLoginSuccess(result.user);
+      } catch (popupError: any) {
+        console.warn('Popup login failed, trying redirect...', popupError);
+        
+        // 팝업 차단, 쿠키 제한, 혹은 브라우저 보안 기능 등으로 실패 시 리다이렉트 자동 대체
+        if (
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/web-storage-unsupported' ||
+          popupError.code === 'auth/popup-closed-by-user' ||
+          popupError.code === 'auth/cancelled-popup-request'
+        ) {
+          await signInWithRedirect(auth, provider);
         } else {
-          const newUserData = {
-            user_id: user.uid,
-            nickname: user.displayName || '물집사',
-            email: user.email || '',
-            region: '서울특별시', // 광역 매핑 기본값
-            profile_memo: '안녕하세요! 반갑습니다. 🐟',
-            avatar: user.photoURL || 'images/avatar-girl.png',
-            created_at: new Date().toISOString().split('T')[0]
-          };
-          localStorage.setItem('mulco_user', JSON.stringify(newUserData));
-          setCurrentUser(newUserData);
-          showToast('첫 방문을 환영합니다! 프로필을 설정해 주세요. 🐠');
-          navigate('/setup');
+          throw popupError;
         }
       }
     } catch (error: any) {
