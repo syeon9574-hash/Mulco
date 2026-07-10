@@ -10,6 +10,7 @@ import { MarketItem, ChatMessage } from '../types';
 import { getCurrentTime, resizeAndCompressImage } from '../utils/format';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { AdBanner } from '../components/common/AdBanner';
 
 const Container = styled.div`
   display: flex;
@@ -56,7 +57,7 @@ const TabContent = styled.div<{ active: boolean }>`
 const ChatContainer = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px 80px;
+  padding: 16px 20px 20px;
   background-color: ${props => props.theme.colors.bg};
 `;
 
@@ -80,28 +81,7 @@ const DateDivider = styled.div`
   &::after { right: 8px; }
 `;
 
-const AdBanner = styled.div`
-  background-color: ${props => props.theme.colors.white};
-  border-top: 1px solid ${props => props.theme.colors.muted};
-  border-bottom: 1px solid ${props => props.theme.colors.muted};
-  padding: 8px 16px;
-  font-size: 0.76rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: ${props => props.theme.colors.text};
-  line-height: 1.3;
-  z-index: 10;
-`;
-
-const AdLabel = styled.span`
-  background-color: ${props => props.theme.colors.sub};
-  color: #2e6a4f;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1.5px 5px;
-  border-radius: 4px;
-`;
+// Styled Ad components removed, using imported AdBanner
 
 const ChatInputBar = styled.div`
   background-color: ${props => props.theme.colors.white};
@@ -110,10 +90,6 @@ const ChatInputBar = styled.div`
   display: flex;
   gap: 10px;
   align-items: center;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   z-index: 99;
 `;
 
@@ -140,6 +116,7 @@ const SendBtn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 `;
 
 const MarketGrid = styled.div`
@@ -1497,10 +1474,13 @@ export const MainPage: React.FC = () => {
             ))}
           </ChatContainer>
 
-          <AdBanner>
-            <AdLabel>광고</AdLabel>
-            <span>물생활 전문 쇼핑몰 '아쿠아팜' — 물꼬 회원 10% 할인</span>
-          </AdBanner>
+          <AdBanner 
+            platform="auto"
+            adSenseClient="" // PC/모바일 웹: 구글 애드센스 Client ID 입력 (예: "ca-pub-xxxxxxxxxxxxxxxx")
+            adSenseSlot=""   // PC/모바일 웹: 구글 애드센스 Slot ID 입력 (예: "9876543210")
+            adMobAndroidAdUnitId="ca-app-pub-5790779596646122/8477437575" // 안드로이드 앱 광고 단위 ID
+            adMobIosAdUnitId="ca-app-pub-5790779596646122/5993945706"     // iOS 앱 광고 단위 ID
+          />
 
           <ChatInputBar>
             <ChatInput 
@@ -1543,6 +1523,13 @@ export const MainPage: React.FC = () => {
               ))}
             </MarketGrid>
           )}
+          <AdBanner 
+            platform="auto"
+            adSenseClient="" // PC/모바일 웹 ID
+            adSenseSlot=""   
+            adMobAndroidAdUnitId="ca-app-pub-5790779596646122/8477437575"
+            adMobIosAdUnitId="ca-app-pub-5790779596646122/5993945706"
+          />
         </TabContent>
 
         {/* Tab 3: Goods Market */}
@@ -1569,6 +1556,13 @@ export const MainPage: React.FC = () => {
               ))}
             </MarketGrid>
           )}
+          <AdBanner 
+            platform="auto"
+            adSenseClient="" // PC/모바일 웹 ID
+            adSenseSlot=""   
+            adMobAndroidAdUnitId="ca-app-pub-5790779596646122/8477437575"
+            adMobIosAdUnitId="ca-app-pub-5790779596646122/5993945706"
+          />
         </TabContent>
       </TabWrapper>
 
