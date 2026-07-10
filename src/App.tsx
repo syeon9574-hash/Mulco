@@ -12,6 +12,7 @@ import { SetupPage } from './pages/SetupPage';
 import { MainPage } from './pages/MainPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DMPage } from './pages/DMPage';
+import { AdminPage } from './pages/AdminPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
               <Route path="/main" element={<MainPage />} />
               <Route path="/profile/:userId" element={<ProfilePage />} />
               <Route path="/dm/:userId" element={<DMPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </Layout>
         </Router>

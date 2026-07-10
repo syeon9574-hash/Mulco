@@ -239,6 +239,12 @@ export const LoginPage: React.FC = () => {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
 
+      if (userSnap.exists() && userSnap.data()?.status === 'BANNED') {
+        showToast('🚫 이 계정은 커뮤니티 정책 위반으로 영구 정지되었습니다.');
+        setIsLoading(false);
+        return;
+      }
+
       const isDeveloper = user.email === 'syeon9574@gmail.com' || user.email?.startsWith('syeon9574') || userSnap.data()?.role === 'admin';
 
       if (isDeveloper) {

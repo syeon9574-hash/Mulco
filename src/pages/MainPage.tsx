@@ -1144,6 +1144,39 @@ export const MainPage: React.FC = () => {
     }
   };
 
+  const handleReportMessage = (msg: ChatMessage) => {
+    const reason = window.prompt(
+      `🚨 [신고하기] "${users[msg.user_id]?.nickname || '이웃 집사'}"님의 메시지를 신고하시겠습니까?\n\n아래 신고 사유 번호를 입력해 주세요:\n1. 스팸 / 광고 홍보\n2. 비속어 / 욕설 / 도배\n3. 불법 물생물/용품 거래\n4. 기타 부적절한 대화`
+    );
+
+    if (reason === null) return; // Cancelled
+    
+    let reasonText = '';
+    const cleanReason = reason.trim();
+    if (cleanReason === '1') reasonText = '스팸 / 광고';
+    else if (cleanReason === '2') reasonText = '비속어 / 욕설 / 도배';
+    else if (cleanReason === '3') reasonText = '불법 생물/용품 거래';
+    else if (cleanReason === '4') reasonText = '기타 부적절한 대화';
+    else reasonText = cleanReason || '기타 사유';
+
+    addDoc(collection(db, 'reports'), {
+      reporter_id: currentUser?.user_id || 'anonymous',
+      reporter_nickname: currentUser?.nickname || '익명 집사',
+      reported_user_id: msg.user_id,
+      reported_nickname: users[msg.user_id]?.nickname || '알 수 없음',
+      message_id: msg.message_id,
+      message_content: msg.content,
+      region: selectedRoom || '로비',
+      reason: reasonText,
+      timestamp: Date.now()
+    }).then(() => {
+      showToast('🚨 신고가 접수되었습니다. 어드민이 확인 후 즉시 조치합니다.');
+    }).catch(err => {
+      console.error(err);
+      showToast('❌ 신고 접수에 실패했습니다.');
+    });
+  };
+
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
     // If it's a Firestore item (does not start with 'item_'), update Firestore doc status
     if (!itemId.startsWith('item_')) {
@@ -1381,6 +1414,15 @@ export const MainPage: React.FC = () => {
             )}
           </LobbyHeaderTitle>
           <LobbyHeaderActions>
+            {currentUser?.role === 'admin' && (
+              <>
+                <LobbyHeaderBtn onClick={() => navigate('/admin')} style={{ color: '#e74c3c', fontWeight: '800' }}>
+                  <span className="ms" style={{ fontSize: '18px', color: '#e74c3c' }}>gavel</span>
+                  신고 관리 센터
+                </LobbyHeaderBtn>
+                <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>|</span>
+              </>
+            )}
             <LobbyHeaderBtn onClick={() => navigate(`/profile/${currentUser?.user_id}`)}>
               <span className="ms" style={{ fontSize: '18px', color: 'var(--point)' }}>account_circle</span>
               내 프로필
@@ -1602,6 +1644,7 @@ export const MainPage: React.FC = () => {
                 sender={users[msg.user_id] || currentUser}
                 onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
                 onDeleteClick={currentUser?.role === 'admin' ? () => handleDeleteMessage(msg.message_id) : undefined}
+                onReportClick={() => handleReportMessage(msg)}
               />
             ))}
           </ChatContainer>

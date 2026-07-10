@@ -9,6 +9,7 @@ interface ChatBubbleProps {
   isMe: boolean;
   onAvatarClick?: () => void;
   onDeleteClick?: () => void;
+  onReportClick?: () => void;
 }
 
 const BubbleRow = styled.div<{ isMe: boolean }>`
@@ -112,7 +113,28 @@ const DeleteBtn = styled.button`
   }
 `;
 
-export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick, onDeleteClick }) => {
+const ReportBtn = styled.button`
+  background: transparent;
+  border: none;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+  cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.65;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #e67e22 !important;
+    opacity: 1;
+  }
+  &:active {
+    transform: scale(0.9);
+  }
+`;
+
+export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick, onDeleteClick, onReportClick }) => {
   const getAvatarBg = () => {
     if (!sender?.avatar) return undefined;
     const bgMap: Record<string, string> = {
@@ -157,6 +179,11 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, o
             <DeleteBtn onClick={onDeleteClick} title="메시지 삭제">
               <span className="ms" style={{ fontSize: '15px' }}>delete</span>
             </DeleteBtn>
+          )}
+          {!isMe && onReportClick && (
+            <ReportBtn onClick={onReportClick} title="신고하기">
+              <span className="ms" style={{ fontSize: '15px' }}>report</span>
+            </ReportBtn>
           )}
         </BubbleContainer>
       </ContentCol>
