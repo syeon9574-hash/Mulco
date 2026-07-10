@@ -950,6 +950,22 @@ export const MainPage: React.FC = () => {
     }
   }, [currentUser, navigate]);
 
+  // Handle hardware / browser back button to exit chat room smoothly
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && e.state.room) {
+        setSelectedRoom(e.state.room);
+      } else {
+        setSelectedRoom(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   // Firestore real-time listener for selectedRoom
   useEffect(() => {
     if (!selectedRoom) return;
@@ -1210,6 +1226,10 @@ export const MainPage: React.FC = () => {
     localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
     
     setSelectedRoom(roomName);
+    
+    // Push 가상 history state를 넣어 뒤로가기 시 방에서만 나가도록 처리
+    window.history.pushState({ room: roomName }, '');
+    
     showToast(`📍 ${roomName} 방에 입장했습니다.`);
   };
 
@@ -1481,7 +1501,11 @@ export const MainPage: React.FC = () => {
     <Container>
       <Header 
         title={`${selectedRoom} 방`} 
-        onBack={() => setSelectedRoom(null)}
+        onBack={() => {
+          setSelectedRoom(null);
+          // 가상 history state를 하나 뒤로 돌림 (popstate가 자동으로 selectedRoom을 null로 제어)
+          window.history.back();
+        }}
         onMenu={() => setIsMenuOpen(true)}
       />
 
