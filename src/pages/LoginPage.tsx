@@ -135,6 +135,75 @@ const TestBtn = styled(Btn)`
   }
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+`;
+
+const ModalContent = styled.div`
+  background: ${props => props.theme.colors.white};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  width: 100%;
+  max-width: 340px;
+  padding: 24px;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: ${props => props.theme.colors.text};
+`;
+
+const ModalDesc = styled.p`
+  font-size: 0.82rem;
+  color: ${props => props.theme.colors.textLight};
+  margin-bottom: 20px;
+  line-height: 1.45;
+`;
+
+const RoleBtn = styled.button<{ $admin?: boolean }>`
+  width: 100%;
+  padding: 14px;
+  border-radius: ${props => props.theme.borderRadius.md};
+  font-weight: 700;
+  font-size: 0.92rem;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background-color: ${props => props.$admin ? props.theme.colors.point : props.theme.colors.sub};
+  color: ${props => props.$admin ? props.theme.colors.white : props.theme.colors.point};
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
 const FooterText = styled.p`
   margin-top: auto;
   padding-top: 40px;
@@ -149,6 +218,8 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast, setCurrentUser } = useApp();
   const [isLoading, setIsLoading] = useState(false);
+  const [tempUser, setTempUser] = useState<any>(null);
+  const [showRoleSelector, setShowRoleSelector] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('mulco_user');
@@ -168,26 +239,44 @@ export const LoginPage: React.FC = () => {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        localStorage.setItem('mulco_user', JSON.stringify(userData));
-        setCurrentUser(userData as any);
-        showToast('구글 로그인에 성공했습니다! 🐠');
-        navigate('/main');
+      const isDeveloper = user.email === 'syeon9574@gmail.com' || user.email?.startsWith('syeon9574');
+
+      if (isDeveloper) {
+        const userData = userSnap.exists()
+          ? userSnap.data()
+          : {
+              user_id: user.uid,
+              nickname: user.displayName || '성수연',
+              email: user.email || '',
+              region: '서울특별시',
+              profile_memo: '물꼬 최고 개발자이자 총운영자입니다. 👑',
+              avatar: user.photoURL || 'images/avatar-girl.png',
+              created_at: new Date().toISOString().split('T')[0]
+            };
+        setTempUser(userData);
+        setShowRoleSelector(true);
       } else {
-        const newUserData = {
-          user_id: user.uid,
-          nickname: user.displayName || '물집사',
-          email: user.email || '',
-          region: '서울특별시', // 광역 매핑 기본값
-          profile_memo: '안녕하세요! 반갑습니다. 🐟',
-          avatar: user.photoURL || 'images/avatar-girl.png',
-          created_at: new Date().toISOString().split('T')[0]
-        };
-        localStorage.setItem('mulco_user', JSON.stringify(newUserData));
-        setCurrentUser(newUserData);
-        showToast('첫 방문을 환영합니다! 프로필을 설정해 주세요. 🐠');
-        navigate('/setup');
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          localStorage.setItem('mulco_user', JSON.stringify(userData));
+          setCurrentUser(userData as any);
+          showToast('구글 로그인에 성공했습니다! 🐠');
+          navigate('/main');
+        } else {
+          const newUserData = {
+            user_id: user.uid,
+            nickname: user.displayName || '물집사',
+            email: user.email || '',
+            region: '서울특별시', // 광역 매핑 기본값
+            profile_memo: '안녕하세요! 반갑습니다. 🐟',
+            avatar: user.photoURL || 'images/avatar-girl.png',
+            created_at: new Date().toISOString().split('T')[0]
+          };
+          localStorage.setItem('mulco_user', JSON.stringify(newUserData));
+          setCurrentUser(newUserData);
+          showToast('첫 방문을 환영합니다! 프로필을 설정해 주세요. 🐠');
+          navigate('/setup');
+        }
       }
     } catch (error: any) {
       console.error(error);
@@ -204,32 +293,49 @@ export const LoginPage: React.FC = () => {
       const userRef = doc(db, 'users', 'test_u001');
       const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        localStorage.setItem('mulco_user', JSON.stringify(userData));
-        setCurrentUser(userData as any);
-        showToast('테스트 계정으로 로그인했습니다! 🐠');
-        navigate('/main');
-      } else {
-        const testUser = {
-          user_id: 'test_u001',
-          nickname: '물꼬친구',
-          email: 'test@mulco.com',
-          region: '서울특별시',
-          regions: ['서울특별시'],
-          profile_memo: '테스트 계정입니다. 반갑습니다! 🐠',
-          avatar: 'images/avatar-girl.png',
-          created_at: new Date().toISOString().split('T')[0]
-        };
-        localStorage.setItem('mulco_user', JSON.stringify(testUser));
-        setCurrentUser(testUser);
-        showToast('테스트 계정 프로필 설정을 시작합니다. 🐠');
-        navigate('/setup');
-      }
+      const userData = userSnap.exists()
+        ? userSnap.data()
+        : {
+            user_id: 'test_u001',
+            nickname: '물꼬친구',
+            email: 'test@mulco.com',
+            region: '서울특별시',
+            regions: ['서울특별시'],
+            profile_memo: '테스트 계정입니다. 반갑습니다! 🐠',
+            avatar: 'images/avatar-girl.png',
+            created_at: new Date().toISOString().split('T')[0]
+          };
+      
+      setTempUser(userData);
+      setShowRoleSelector(true);
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleSelect = (role: 'user' | 'admin') => {
+    if (!tempUser) return;
+    const finalUser = {
+      ...tempUser,
+      role
+    };
+    localStorage.setItem('mulco_user', JSON.stringify(finalUser));
+    setCurrentUser(finalUser);
+    setShowRoleSelector(false);
+    
+    if (role === 'admin') {
+      showToast('🛠️ 최고 관리자 모드로 접속했습니다.');
+    } else {
+      showToast('🐠 일반 사용자 모드로 접속했습니다.');
+    }
+    
+    // Redirect
+    if (finalUser.created_at === new Date().toISOString().split('T')[0] && !tempUser.regions) {
+      navigate('/setup');
+    } else {
+      navigate('/main');
     }
   };
 
@@ -268,6 +374,28 @@ export const LoginPage: React.FC = () => {
           <span className="text-point" style={{ fontWeight: 600 }}>개인정보 처리방침</span>에 동의합니다.
         </FooterText>
       </FormSection>
+
+      {/* Role Selection Modal Overlay */}
+      {showRoleSelector && (
+        <ModalOverlay>
+          <ModalContent>
+            <span className="ms" style={{ fontSize: '42px', color: 'var(--point)', marginBottom: '12px', display: 'block' }}>admin_panel_settings</span>
+            <ModalTitle>접속 권한 선택</ModalTitle>
+            <ModalDesc>
+              환영합니다, {tempUser?.nickname}님!<br />
+              이 계정으로 접속할 모드를 선택해 주세요.
+            </ModalDesc>
+            <RoleBtn $admin onClick={() => handleRoleSelect('admin')}>
+              <span className="ms" style={{ fontSize: '18px' }}>shield_person</span>
+              최고 관리자 모드로 로그인
+            </RoleBtn>
+            <RoleBtn onClick={() => handleRoleSelect('user')}>
+              <span className="ms" style={{ fontSize: '18px' }}>person</span>
+              일반 사용자 모드로 로그인
+            </RoleBtn>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </PageWrapper>
   );
 };

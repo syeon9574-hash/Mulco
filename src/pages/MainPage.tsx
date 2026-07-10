@@ -9,7 +9,7 @@ import { MarketCard } from '../components/chat/MarketCard';
 import { MarketItem, ChatMessage } from '../types';
 import { getCurrentTime, resizeAndCompressImage } from '../utils/format';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { AdBanner } from '../components/common/AdBanner';
 
 const Container = styled.div`
@@ -1086,6 +1086,24 @@ export const MainPage: React.FC = () => {
     }
   };
 
+  const handleDeleteMessage = (messageId: string) => {
+    if (window.confirm('💬 이 메시지를 삭제하시겠습니까? (삭제하면 다른 회원들의 화면에서도 즉시 사라집니다.)')) {
+      if (!messageId.startsWith('msg_')) {
+        const msgRef = doc(db, 'chatMessages', messageId);
+        deleteDoc(msgRef).then(() => {
+          showToast('🗑️ 메시지가 삭제되었습니다.');
+        }).catch(err => {
+          console.error("Failed to delete message: ", err);
+          showToast('❌ 메시지 삭제에 실패했습니다.');
+        });
+      } else {
+        // Local mock message delete
+        setRoomMessages(prev => prev.filter(m => m.message_id !== messageId));
+        showToast('🗑️ 테스트 메시지가 삭제되었습니다.');
+      }
+    }
+  };
+
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
     // If it's a Firestore item (does not start with 'item_'), update Firestore doc status
     if (!itemId.startsWith('item_')) {
@@ -1500,6 +1518,7 @@ export const MainPage: React.FC = () => {
                 isMe={msg.user_id === currentUser?.user_id}
                 sender={users[msg.user_id] || currentUser}
                 onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
+                onDeleteClick={currentUser?.role === 'admin' ? () => handleDeleteMessage(msg.message_id) : undefined}
               />
             ))}
           </ChatContainer>

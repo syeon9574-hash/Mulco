@@ -8,6 +8,7 @@ interface ChatBubbleProps {
   sender: User | null;
   isMe: boolean;
   onAvatarClick?: () => void;
+  onDeleteClick?: () => void;
 }
 
 const BubbleRow = styled.div<{ isMe: boolean }>`
@@ -53,6 +54,21 @@ const SenderName = styled.div`
   color: ${props => props.theme.colors.text};
   opacity: 0.7;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+`;
+
+const AdminBadge = styled.span`
+  background-color: ${props => props.theme.colors.point};
+  color: ${props => props.theme.colors.white};
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 `;
 
 const BubbleContainer = styled.div`
@@ -79,7 +95,28 @@ const TimeLabel = styled.div`
   white-space: nowrap;
 `;
 
-export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick }) => {
+const DeleteBtn = styled.button`
+  background: transparent;
+  border: none;
+  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+
+  ${BubbleRow}:hover & {
+    opacity: 0.75;
+  }
+  &:hover {
+    color: #e74c3c !important;
+    opacity: 1 !important;
+  }
+`;
+
+export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick, onDeleteClick }) => {
   const getAvatarBg = () => {
     if (!sender?.avatar) return undefined;
     const bgMap: Record<string, string> = {
@@ -109,12 +146,22 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, o
       )}
       
       <ContentCol>
-        {!isMe && <SenderName>{sender?.nickname || '알 수 없음'}</SenderName>}
+        {!isMe && (
+          <SenderName>
+            {sender?.nickname || '알 수 없음'}
+            {sender?.role === 'admin' && <AdminBadge>운영자 👑</AdminBadge>}
+          </SenderName>
+        )}
         <BubbleContainer style={{ flexDirection: isMe ? 'row-reverse' : 'row' }}>
           <MessageBubble isMe={isMe}>
             {message.content}
           </MessageBubble>
           <TimeLabel>{message.time}</TimeLabel>
+          {onDeleteClick && (
+            <DeleteBtn onClick={onDeleteClick} title="메시지 삭제">
+              <span className="ms" style={{ fontSize: '15px' }}>delete</span>
+            </DeleteBtn>
+          )}
         </BubbleContainer>
       </ContentCol>
     </BubbleRow>
