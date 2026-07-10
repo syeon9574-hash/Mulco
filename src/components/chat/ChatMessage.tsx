@@ -10,6 +10,7 @@ interface ChatBubbleProps {
   onAvatarClick?: () => void;
   onDeleteClick?: () => void;
   onReportClick?: () => void;
+  isHost?: boolean;
 }
 
 const BubbleRow = styled.div<{ isMe: boolean }>`
@@ -62,6 +63,19 @@ const SenderName = styled.div`
 const AdminBadge = styled.span`
   background-color: ${props => props.theme.colors.point};
   color: ${props => props.theme.colors.white};
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+`;
+
+const HostBadge = styled.span`
+  background-color: #f1c40f;
+  color: #2c3e50;
   font-size: 0.62rem;
   font-weight: 800;
   padding: 1.5px 5px;
@@ -134,7 +148,7 @@ const ReportBtn = styled.button`
   }
 `;
 
-export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick, onDeleteClick, onReportClick }) => {
+export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick, onDeleteClick, onReportClick, isHost }) => {
   const getAvatarBg = () => {
     if (!sender?.avatar) return undefined;
     const bgMap: Record<string, string> = {
@@ -168,6 +182,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, o
           <SenderName>
             {sender?.nickname || '알 수 없음'}
             {sender?.role === 'admin' && <AdminBadge>운영자 👑</AdminBadge>}
+            {isHost && <HostBadge>방장 ⭐️</HostBadge>}
           </SenderName>
         )}
         <BubbleContainer style={{ flexDirection: isMe ? 'row-reverse' : 'row' }}>

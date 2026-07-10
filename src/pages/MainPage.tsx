@@ -6,7 +6,7 @@ import { Header } from '../components/common/Header';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { ChatBubble } from '../components/chat/ChatMessage';
 import { MarketCard } from '../components/chat/MarketCard';
-import { MarketItem, ChatMessage } from '../types';
+import { MarketItem, ChatMessage, User } from '../types';
 import { getCurrentTime, resizeAndCompressImage } from '../utils/format';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
@@ -1145,7 +1145,19 @@ export const MainPage: React.FC = () => {
   };
 
   const handleDeleteMessage = (messageId: string) => {
-    if (window.confirm('💬 이 메시지를 삭제하시겠습니까? (삭제하면 다른 회원들의 화면에서도 즉시 사라집니다.)')) {
+    const isHost = currentRoomHost && currentUser?.user_id === currentRoomHost.user_id;
+    const isAdmin = currentUser?.role === 'admin';
+    
+    if (!isAdmin && !isHost) {
+      showToast('❌ 메시지 삭제 권한이 없습니다.');
+      return;
+    }
+
+    const confirmLabel = isHost 
+      ? '⭐️ [방장 권한] 이 메시지를 삭제하시겠습니까? (삭제하면 다른 회원들의 화면에서도 즉시 사라집니다.)' 
+      : '💬 이 메시지를 삭제하시겠습니까? (다른 회원들의 화면에서도 삭제됩니다.)';
+
+    if (window.confirm(confirmLabel)) {
       if (!messageId.startsWith('msg_')) {
         const msgRef = doc(db, 'chatMessages', messageId);
         deleteDoc(msgRef).then(() => {
@@ -1399,6 +1411,39 @@ export const MainPage: React.FC = () => {
       setIsSearchLoading(false);
     }
   };
+
+  // 👑 동네방 나눔 랭킹에 따른 자동 방장 위임 시스템
+  const getRoomHost = (): User | null => {
+    if (!selectedRoom) return null;
+
+    // 1. 이 방(selectedRoom)에 속한 유저들 필터링 (어드민 제외)
+    const candidates = Object.values(users).filter(u => 
+      u.role !== 'admin' && 
+      (u.region === selectedRoom || (u.regions && u.regions.includes(selectedRoom)))
+    );
+
+    if (candidates.length === 0) return null;
+
+    // 2. 각 유저별 나눔 완료(COMPLETED) 횟수 집계 (생물 + 용품)
+    const allItems = [...biologyItems, ...goodsItems];
+    const userScores = candidates.map(user => {
+      const completedCount = allItems.filter(item => 
+        item.user_id === user.user_id && 
+        item.status === 'COMPLETED'
+      ).length;
+      return { user, score: completedCount };
+    });
+
+    // 3. 1회 이상 나눔을 완료한 1등 유저 선출
+    const activeCandidates = userScores.filter(s => s.score > 0);
+    if (activeCandidates.length === 0) return null;
+
+    // 점수 내림차순 정렬
+    activeCandidates.sort((a, b) => b.score - a.score);
+    return activeCandidates[0].user;
+  };
+
+  const currentRoomHost = getRoomHost();
 
   const filteredMessages = roomMessages.filter(msg => {
     const isBlocked = blockedUsers.includes(msg.user_id);
@@ -1666,17 +1711,23 @@ export const MainPage: React.FC = () => {
         <TabContent active={currentTab === 'all-chat'}>
           <ChatContainer ref={chatContainerRef}>
             <DateDivider>2026년 7월 5일</DateDivider>
-            {filteredMessages.map(msg => (
-              <ChatBubble 
-                key={msg.message_id}
-                message={msg}
-                isMe={msg.user_id === currentUser?.user_id}
-                sender={users[msg.user_id] || currentUser}
-                onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
-                onDeleteClick={currentUser?.role === 'admin' ? () => handleDeleteMessage(msg.message_id) : undefined}
-                onReportClick={() => handleReportMessage(msg)}
-              />
-            ))}
+            {filteredMessages.map(msg => {
+              const isMsgOwner = msg.user_id === currentUser?.user_id;
+              const isRoomHost = currentRoomHost && msg.user_id === currentRoomHost.user_id;
+              const isModerator = currentUser?.role === 'admin' || (currentRoomHost && currentUser?.user_id === currentRoomHost.user_id);
+              return (
+                <ChatBubble 
+                  key={msg.message_id}
+                  message={msg}
+                  isMe={isMsgOwner}
+                  sender={users[msg.user_id] || currentUser}
+                  onAvatarClick={() => navigate(`/profile/${msg.user_id}`)}
+                  onDeleteClick={isModerator ? () => handleDeleteMessage(msg.message_id) : undefined}
+                  onReportClick={() => handleReportMessage(msg)}
+                  isHost={isRoomHost ? true : false}
+                />
+              );
+            })}
           </ChatContainer>
 
           <AdBanner 
