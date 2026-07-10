@@ -338,6 +338,9 @@ const LobbyLogoutBtn = styled.button`
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const LobbyHeaderActions = styled.div`
@@ -359,6 +362,12 @@ const LobbyHeaderBtn = styled.button`
 
   &:active {
     opacity: 0.7;
+  }
+`;
+
+const ResponsiveText = styled.span`
+  @media (max-width: 480px) {
+    display: none;
   }
 `;
 
@@ -1418,17 +1427,20 @@ export const MainPage: React.FC = () => {
               <>
                 <LobbyHeaderBtn onClick={() => navigate('/admin')} style={{ color: '#e74c3c', fontWeight: '800' }}>
                   <span className="ms" style={{ fontSize: '18px', color: '#e74c3c' }}>gavel</span>
-                  신고 관리 센터
+                  <ResponsiveText>신고 관리 센터</ResponsiveText>
                 </LobbyHeaderBtn>
                 <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>|</span>
               </>
             )}
             <LobbyHeaderBtn onClick={() => navigate(`/profile/${currentUser?.user_id}`)}>
               <span className="ms" style={{ fontSize: '18px', color: 'var(--point)' }}>account_circle</span>
-              내 프로필
+              <ResponsiveText>내 프로필</ResponsiveText>
             </LobbyHeaderBtn>
             <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>|</span>
-            <LobbyLogoutBtn onClick={logout}>로그아웃</LobbyLogoutBtn>
+            <LobbyLogoutBtn onClick={logout}>
+              <span className="ms" style={{ fontSize: '18px' }}>logout</span>
+              <ResponsiveText>로그아웃</ResponsiveText>
+            </LobbyLogoutBtn>
           </LobbyHeaderActions>
         </LobbyHeader>
 

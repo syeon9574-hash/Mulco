@@ -209,6 +209,11 @@ const ActionRow = styled.div`
   grid-template-columns: 1fr 1.2fr 1fr;
   gap: 8px;
   margin-top: 6px;
+
+  @media (max-width: 375px) {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
 `;
 
 const ActionBtn = styled.button<{ $type: 'dismiss' | 'delete' | 'ban' }>`
