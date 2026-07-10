@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useApp } from '../context/AppContext';
+import { normalizeRegionToRoom } from '../utils/format';
 
 const PageWrapper = styled.section`
   display: flex;
@@ -333,14 +334,15 @@ export const SetupPage: React.FC = () => {
             regionName = '서울특별시';
           }
 
-          setGpsStatus(`✅ ${regionName} 감지됨`);
-          setSelectedRegion(regionName);
+          const normalized = normalizeRegionToRoom(regionName);
+          setGpsStatus(`✅ ${normalized} 감지됨`);
+          setSelectedRegion(normalized);
 
-          if (!regions.includes(regionName)) {
-            setRegions(prev => [regionName, ...prev]);
+          if (!regions.includes(normalized)) {
+            setRegions(prev => [normalized, ...prev]);
           }
 
-          showToast(`내 동네가 '${regionName}'(으)로 설정되었어요!`);
+          showToast(`내 동네가 '${normalized}'(으)로 설정되었어요!`);
         } catch (error) {
           console.error(error);
           setGpsStatus('❌ 주소 변환 실패');
@@ -400,7 +402,9 @@ export const SetupPage: React.FC = () => {
         }
       });
 
-      const uniqueList = formattedList.filter((v: string, i: number, a: string[]) => v && a.indexOf(v) === i);
+      const uniqueList = formattedList
+        .map((r: string) => normalizeRegionToRoom(r))
+        .filter((v: string, i: number, a: string[]) => v && a.indexOf(v) === i);
       setRegions(uniqueList);
     } catch (err) {
       console.error(err);

@@ -8,6 +8,7 @@ import {
 
 import { db, requestNotificationPermission } from '../firebase';
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { normalizeRegionToRoom } from '../utils/format';
 
 interface ToastInfo {
   id: string;
@@ -80,6 +81,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Save current user profile to Firestore
   useEffect(() => {
     if (currentUser) {
+      const normalizedRegion = normalizeRegionToRoom(currentUser.region);
+      const normalizedRegions = (currentUser.regions || []).map(r => normalizeRegionToRoom(r));
+      
+      const hasDiff = currentUser.region !== normalizedRegion || 
+                      JSON.stringify(currentUser.regions) !== JSON.stringify(normalizedRegions);
+
+      if (hasDiff) {
+        const updated = {
+          ...currentUser,
+          region: normalizedRegion,
+          regions: normalizedRegions.length > 0 ? normalizedRegions : [normalizedRegion]
+        };
+        setCurrentUser(updated);
+        localStorage.setItem('mulco_user', JSON.stringify(updated));
+        return;
+      }
+
       const userRef = doc(db, 'users', currentUser.user_id);
       setDoc(userRef, currentUser, { merge: true }).catch(err => {
         console.warn("Failed to sync current user profile to Firestore: ", err);
