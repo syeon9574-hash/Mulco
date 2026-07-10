@@ -579,6 +579,30 @@ const popularRooms = [
   { name: '부산광역시', count: 82, emoji: '🌊' }
 ];
 
+const ALL_ADMIN_ROOMS = [
+  { name: '서울특별시', emoji: '🏙️' },
+  { name: '경기도 성남시', emoji: '💻' },
+  { name: '경기도 수원시', emoji: '🏰' },
+  { name: '경기도 고양시', emoji: '🌷' },
+  { name: '경기도 용인시', emoji: '🎢' },
+  { name: '인천광역시', emoji: '⚓' },
+  { name: '대전광역시', emoji: '🌻' },
+  { name: '대구광역시', emoji: '🍎' },
+  { name: '울산광역시', emoji: '🏭' },
+  { name: '광주광역시', emoji: '🌸' },
+  { name: '부산광역시', emoji: '🌊' },
+  { name: '세종특별자치시', emoji: '🏛️' },
+  { name: '경기도', emoji: '🚗' },
+  { name: '강원도', emoji: '🏔️' },
+  { name: '충청북도', emoji: '🌰' },
+  { name: '충청남도', emoji: '🍓' },
+  { name: '전라북도', emoji: '🍚' },
+  { name: '전라남도', emoji: '🌅' },
+  { name: '경상북도', emoji: '🏯' },
+  { name: '경상남도', emoji: '🚢' },
+  { name: '제주특별자치도', emoji: '🍊' }
+];
+
 // 지역명으로 대표 이모지 반환 (시 단위 개별 매핑)
 const getRegionEmoji = (regionName: string): string => {
   const n = regionName;
@@ -1367,90 +1391,114 @@ export const MainPage: React.FC = () => {
         </LobbyHeader>
 
         <LobbyContent>
-          {/* 내 동네 목록 */}
-          <LobbySection>
-            <LobbySectionHeader>
-              <LobbySectionTitle>내 동네방</LobbySectionTitle>
-              <LobbyAddBtn onClick={() => {
-                if (userRegions.length >= 2) {
-                  showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!');
-                } else {
-                  setIsAddRegionModalOpen(true);
-                }
-              }}>
-                <span className="ms" style={{ fontSize: '16px' }}>add</span> 동네 추가하기
-              </LobbyAddBtn>
-            </LobbySectionHeader>
+          {currentUser?.role === 'admin' ? (
+            /* ================= 최고 관리자 전용 로비 (전체 동네방 리스트) ================= */
+            <LobbySection>
+              <LobbySectionHeader>
+                <LobbySectionTitle>전체 동네방 관리</LobbySectionTitle>
+              </LobbySectionHeader>
 
-            {userRegions.map((regionName, idx) => {
-              // 어드민은 모든 방에 상주하므로, 이 방 유저 수 + 어드민 수 계산
-              const actualCount = Object.values(users).filter(u => u.region === regionName || u.role === 'admin').length;
-              return (
-                <RoomCard key={idx} registered onClick={() => handleEnterRoom(regionName)}>
-                  <RoomDetails>
-                    <RoomIcon>{getRegionEmoji(regionName)}</RoomIcon>
-                    <RoomText>
-                      <RoomName>{regionName} 방</RoomName>
-                      <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
-                    </RoomText>
-                  </RoomDetails>
-                  <EnterArrow>입장 →</EnterArrow>
-                </RoomCard>
-              );
-            })}
-
-            {currentUser?.role !== 'admin' && (
-              <LockCard onClick={() => showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!')}>
-                <LockDetails>
-                  <RoomIcon style={{ backgroundColor: '#FFF9E6' }}>🔒</RoomIcon>
-                  <LockText>
-                    <LockTitle>3번째 동네 등록하기</LockTitle>
-                    <LockBadge>PREMIUM</LockBadge>
-                  </LockText>
-                </LockDetails>
-                <span className="ms" style={{ color: '#E0E0DB' }}>lock</span>
-              </LockCard>
-            )}
-          </LobbySection>
-
-          {/* 전체 동네방 둘러보기 */}
-          <LobbySection>
-            <LobbySectionTitle>인기 동네방 둘러보기</LobbySectionTitle>
-            {popularRooms.map((room, idx) => {
-              const isRegistered = userRegions.includes(room.name);
-              const isAdmin = currentUser?.role === 'admin';
-              const canEnter = isRegistered || isAdmin;
-              const actualCount = Object.values(users).filter(u => u.region.includes(room.name) || room.name.includes(u.region) || u.role === 'admin').length;
-              return (
-                <RoomCard 
-                  key={idx} 
-                  onClick={() => {
-                    if (canEnter) {
-                      handleEnterRoom(room.name);
-                    } else {
-                      showToast(`💡 이 방에 참여하려면 '내 동네 추가하기'로 먼저 등록해 주세요!`);
-                    }
-                  }}
-                  style={{ opacity: canEnter ? 1 : 0.7 }}
-                >
-                  <RoomDetails>
-                    <RoomIcon>{room.emoji}</RoomIcon>
-                    <RoomText>
-                      <RoomName>{room.name} 방</RoomName>
-                      <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
-                    </RoomText>
-                  </RoomDetails>
-                  {isRegistered ? (
-                    <EnterArrow>입장 →</EnterArrow>
-                  ) : isAdmin ? (
+              {ALL_ADMIN_ROOMS.map((room, idx) => {
+                // 어드민 상주 카운트(+1)가 포함된 접속자 수 계산
+                const actualCount = Object.values(users).filter(u => u.region === room.name || u.role === 'admin').length;
+                return (
+                  <RoomCard key={idx} registered onClick={() => handleEnterRoom(room.name)}>
+                    <RoomDetails>
+                      <RoomIcon>{room.emoji}</RoomIcon>
+                      <RoomText>
+                        <RoomName>{room.name} 방</RoomName>
+                        <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
+                      </RoomText>
+                    </RoomDetails>
                     <EnterArrow style={{ color: '#e74c3c' }}>관리 입장 →</EnterArrow>
-                  ) : (
-                    <span className="ms" style={{ fontSize: '18px', color: '#E0E0DB' }}>add_circle</span>
-                  )}
-                </RoomCard>
-              );
-            })}
-          </LobbySection>
+                  </RoomCard>
+                );
+              })}
+            </LobbySection>
+          ) : (
+            /* ================= 일반 사용자 전용 로비 ================= */
+            <>
+              {/* 내 동네 목록 */}
+              <LobbySection>
+                <LobbySectionHeader>
+                  <LobbySectionTitle>내 동네방</LobbySectionTitle>
+                  <LobbyAddBtn onClick={() => {
+                    if (userRegions.length >= 2) {
+                      showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!');
+                    } else {
+                      setIsAddRegionModalOpen(true);
+                    }
+                  }}>
+                    <span className="ms" style={{ fontSize: '16px' }}>add</span> 동네 추가하기
+                  </LobbyAddBtn>
+                </LobbySectionHeader>
+
+                {userRegions.map((regionName, idx) => {
+                  // 일반 유저용 어드민 포함 카운트
+                  const actualCount = Object.values(users).filter(u => u.region === regionName || u.role === 'admin').length;
+                  return (
+                    <RoomCard key={idx} registered onClick={() => handleEnterRoom(regionName)}>
+                      <RoomDetails>
+                        <RoomIcon>{getRegionEmoji(regionName)}</RoomIcon>
+                        <RoomText>
+                          <RoomName>{regionName} 방</RoomName>
+                          <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
+                        </RoomText>
+                      </RoomDetails>
+                      <EnterArrow>입장 →</EnterArrow>
+                    </RoomCard>
+                  );
+                })}
+
+                <LockCard onClick={() => showToast('⭐ 프리미엄 멤버십은 현재 준비 중입니다. 출시되면 알려드릴게요!')}>
+                  <LockDetails>
+                    <RoomIcon style={{ backgroundColor: '#FFF9E6' }}>🔒</RoomIcon>
+                    <LockText>
+                      <LockTitle>3번째 동네 등록하기</LockTitle>
+                      <LockBadge>PREMIUM</LockBadge>
+                    </LockText>
+                  </LockDetails>
+                  <span className="ms" style={{ color: '#E0E0DB' }}>lock</span>
+                </LockCard>
+              </LobbySection>
+
+              {/* 전체 동네방 둘러보기 */}
+              <LobbySection>
+                <LobbySectionTitle>인기 동네방 둘러보기</LobbySectionTitle>
+                {popularRooms.map((room, idx) => {
+                  const isRegistered = userRegions.includes(room.name);
+                  const canEnter = isRegistered;
+                  const actualCount = Object.values(users).filter(u => u.region.includes(room.name) || room.name.includes(u.region) || u.role === 'admin').length;
+                  return (
+                    <RoomCard 
+                      key={idx} 
+                      onClick={() => {
+                        if (canEnter) {
+                          handleEnterRoom(room.name);
+                        } else {
+                          showToast('💡 이 방에 참여하려면 \'내 동네 추가하기\'로 먼저 등록해 주세요!');
+                        }
+                      }}
+                      style={{ opacity: canEnter ? 1 : 0.7 }}
+                    >
+                      <RoomDetails>
+                        <RoomIcon>{room.emoji}</RoomIcon>
+                        <RoomText>
+                          <RoomName>{room.name} 방</RoomName>
+                          <RoomMembers>👥 접속자 {actualCount}명</RoomMembers>
+                        </RoomText>
+                      </RoomDetails>
+                      {isRegistered ? (
+                        <EnterArrow>입장 →</EnterArrow>
+                      ) : (
+                        <span className="ms" style={{ fontSize: '18px', color: '#E0E0DB' }}>add_circle</span>
+                      )}
+                    </RoomCard>
+                  );
+                })}
+              </LobbySection>
+            </>
+          )}
         </LobbyContent>
 
         {/* 동네 추가 모달 */}
