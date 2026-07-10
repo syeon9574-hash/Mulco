@@ -1350,7 +1350,12 @@ export const MainPage: React.FC = () => {
           <span className="ms">refresh</span>
         </RefreshSpinner>
         <LobbyHeader>
-          <LobbyHeaderTitle>물꼬 동네방 로비</LobbyHeaderTitle>
+          <LobbyHeaderTitle style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            물꼬 동네방 로비
+            {currentUser?.role === 'admin' && (
+              <span style={{ fontSize: '0.68rem', backgroundColor: '#e74c3c', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>ADMIN</span>
+            )}
+          </LobbyHeaderTitle>
           <LobbyHeaderActions>
             <LobbyHeaderBtn onClick={() => navigate(`/profile/${currentUser?.user_id}`)}>
               <span className="ms" style={{ fontSize: '18px', color: 'var(--point)' }}>account_circle</span>

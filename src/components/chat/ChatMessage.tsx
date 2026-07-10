@@ -98,21 +98,17 @@ const TimeLabel = styled.div`
 const DeleteBtn = styled.button`
   background: transparent;
   border: none;
-  color: ${props => props.theme.colors.textLight || '#8c8c8c'};
+  color: #e74c3c;
   cursor: pointer;
-  padding: 2px;
+  padding: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.3;
+  opacity: 0.65;
   transition: opacity 0.2s ease;
 
-  ${BubbleRow}:hover & {
-    opacity: 0.75;
-  }
-  &:hover {
-    color: #e74c3c !important;
-    opacity: 1 !important;
+  &:active {
+    opacity: 1;
   }
 `;
 
