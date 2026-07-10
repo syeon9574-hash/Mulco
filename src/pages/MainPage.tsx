@@ -1377,9 +1377,8 @@ export const MainPage: React.FC = () => {
   const currentRoomHost = getRoomHost();
 
   const getRoomMemberCount = (roomName: string): number => {
-    // 1. 해당 방에 가입된 실제 유저 (Mock 유저 및 어드민 제외)
+    // 1. 해당 방에 가입된 실제 유저 (데모 회원 포함, 어드민 제외)
     const realUsersInRoom = Object.values(users).filter(u => 
-      !u.user_id.startsWith('u00') && // mockData의 데모 유저 제외
       u.role !== 'admin' &&           // 어드민 계정 제외
       normalizeRegionToRoom(u.region) === roomName
     );
