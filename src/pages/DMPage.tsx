@@ -292,12 +292,10 @@ export const DMPage: React.FC = () => {
   useEffect(() => {
     if (!currentUser || !targetUser) return;
 
-    // Limit to latest 50 messages to protect free quota
+    // Listen to dmMessages without orderBy to avoid composite index requirement
     const q = query(
       collection(db, 'dmMessages'),
-      where('chat_key', '==', chatKey),
-      orderBy('timestamp', 'desc'),
-      limit(50)
+      where('chat_key', '==', chatKey)
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
@@ -313,8 +311,14 @@ export const DMPage: React.FC = () => {
         // Sort by timestamp asc (chronological display order)
         msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
         
+        // Take latest 50 messages
+        let limitedMsgs = msgs;
+        if (msgs.length > 50) {
+          limitedMsgs = msgs.slice(-50);
+        }
+
         // Map messages' type field based on sender_id
-        const mappedMsgs = msgs.map(m => {
+        const mappedMsgs = limitedMsgs.map(m => {
           const mData = m as any;
           return {
             ...m,
@@ -327,6 +331,8 @@ export const DMPage: React.FC = () => {
       }
     }, (err) => {
       console.warn("Firestore DMs fetch failed, using fallback: ", err);
+      const fallback = dmMessages[targetUser.user_id] || [];
+      setLocalDmMessages(fallback);
     });
 
     return () => unsub();

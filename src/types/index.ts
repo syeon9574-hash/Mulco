@@ -28,6 +28,7 @@ export interface ChatMessage {
   content: string;
   time: string;
   reportCount?: number;
+  region?: string;
 }
 
 export interface MarketItem {

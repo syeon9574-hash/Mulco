@@ -5,9 +5,9 @@ import { useApp } from '../context/AppContext';
 import { Header } from '../components/common/Header';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { formatPrice } from '../utils/format';
-import { User } from '../types';
+import { User, MarketItem } from '../types';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc } from 'firebase/firestore';
 
 const Container = styled.div`
   display: flex;
@@ -378,13 +378,42 @@ export const ProfilePage: React.FC = () => {
   const [editAvatar, setEditAvatar] = useState('');
   const [reportCount, setReportCount] = useState<number>(0);
 
-  const targetUser = userId === currentUser?.user_id ? currentUser : users[userId || ''];
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [userMarketItems, setUserMarketItems] = useState<MarketItem[]>([]);
+  const [isUserLoading, setIsUserLoading] = useState(true);
+
+  const targetUser = userId === currentUser?.user_id ? currentUser : (users[userId || ''] || dbUser);
 
   useEffect(() => {
-    if (!targetUser) {
-      navigate('/main');
+    const savedUser = localStorage.getItem('mulco_user');
+    if (!savedUser) {
+      navigate('/');
+      return;
     }
-  }, [targetUser, navigate]);
+
+    if (targetUser) {
+      setIsUserLoading(false);
+      return;
+    }
+
+    // Fetch profile from Firestore if not in memory/state
+    if (userId) {
+      const userRef = doc(db, 'users', userId);
+      getDoc(userRef).then(snap => {
+        if (snap.exists()) {
+          setDbUser(snap.data() as User);
+          setIsUserLoading(false);
+        } else {
+          showToast('존재하지 않는 사용자입니다.');
+          navigate('/main');
+        }
+      }).catch(err => {
+        console.warn("Failed to fetch user profile: ", err);
+        setIsUserLoading(false);
+        navigate('/main');
+      });
+    }
+  }, [userId, targetUser, navigate]);
 
   // Fetch report history count from Firestore
   useEffect(() => {
@@ -420,7 +449,34 @@ export const ProfilePage: React.FC = () => {
     }
   }, [searchParams, targetUser, currentUser]);
 
-  if (!targetUser) return null;
+  // Fetch user's market items from Firestore for Sale History
+  useEffect(() => {
+    if (!targetUser) return;
+
+    const q = query(
+      collection(db, 'marketItems'),
+      where('user_id', '==', targetUser.user_id)
+    );
+
+    getDocs(q).then(snapshot => {
+      const itemsList: MarketItem[] = [];
+      snapshot.forEach(doc => {
+        itemsList.push({ item_id: doc.id, ...doc.data() } as MarketItem);
+      });
+      itemsList.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
+      setUserMarketItems(itemsList);
+    }).catch(err => {
+      console.warn("Failed to fetch user market items: ", err);
+    });
+  }, [targetUser]);
+
+  if (isUserLoading || !targetUser) {
+    return (
+      <Container style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <p style={{ fontSize: '0.9rem', color: 'var(--textLight)' }}>로딩 중...</p>
+      </Container>
+    );
+  }
 
   const isMe = targetUser.user_id === currentUser?.user_id;
 
@@ -437,14 +493,27 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleCompleteItem = (itemId: string, category: 'BIOLOGY' | 'GOODS') => {
-    const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
-    setter(prev => prev.map(item => {
-      if (item.item_id === itemId) {
-        return { ...item, status: 'COMPLETED' };
-      }
-      return item;
-    }));
-    showToast('거래가 완료되었습니다.');
+    if (!itemId.startsWith('item_')) {
+      const itemRef = doc(db, 'marketItems', itemId);
+      updateDoc(itemRef, { status: 'COMPLETED' }).then(() => {
+        showToast('거래가 완료되었습니다.');
+        setUserMarketItems(prev => prev.map(item => 
+          item.item_id === itemId ? { ...item, status: 'COMPLETED' } : item
+        ));
+      }).catch(err => {
+        console.error("Failed to complete item: ", err);
+        showToast("❌ 상태 변경에 실패했습니다.");
+      });
+    } else {
+      const setter = category === 'BIOLOGY' ? setBiologyItems : setGoodsItems;
+      setter(prev => prev.map(item => {
+        if (item.item_id === itemId) {
+          return { ...item, status: 'COMPLETED' };
+        }
+        return item;
+      }));
+      showToast('거래가 완료되었습니다.');
+    }
   };
 
   const handleReportSubmit = async () => {
@@ -588,10 +657,7 @@ export const ProfilePage: React.FC = () => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const items = [
-    ...biologyItems.filter(i => i.user_id === targetUser.user_id),
-    ...goodsItems.filter(i => i.user_id === targetUser.user_id)
-  ].slice(0, 3);
+  const items = userMarketItems.slice(0, 3);
 
   const isBlocked = blockedUsers.includes(targetUser.user_id);
 
@@ -604,7 +670,13 @@ export const ProfilePage: React.FC = () => {
     <Container>
       <Header 
         title="프로필" 
-        onBack={() => navigate('/main')}
+        onBack={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate('/main');
+          }
+        }}
         onMenu={() => setIsMenuOpen(true)}
       />
 

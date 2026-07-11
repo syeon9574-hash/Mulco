@@ -354,6 +354,7 @@ export const LoginPage: React.FC = () => {
       
       const finalUser = {
         ...userData,
+        region: '서울특별시', // Force reset to default to clean up previous dirty Firestore state
         role: 'user'
       } as any;
       

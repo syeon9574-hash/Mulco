@@ -812,11 +812,14 @@ export const MainPage: React.FC = () => {
     goodsItems, 
     setGoodsItems, 
     users, 
+    setUsers,
     blockedUsers,
     showToast 
   } = useApp();
 
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(() => {
+    return window.history.state?.room || null;
+  });
   const [isAddRegionModalOpen, setIsAddRegionModalOpen] = useState(false);
   const [newRegionQuery, setNewRegionQuery] = useState('');
   const [searchRegionsResult, setSearchRegionsResult] = useState<string[]>([]);
@@ -912,36 +915,67 @@ export const MainPage: React.FC = () => {
     };
   }, []);
 
+  // Sync neighbors' regions with selectedRoom to ensure correct fallback messages filtering
+  useEffect(() => {
+    if (selectedRoom) {
+      setUsers(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(uid => {
+          if (uid !== currentUser?.user_id) {
+            next[uid] = {
+              ...next[uid],
+              region: selectedRoom
+            };
+          }
+        });
+        return next;
+      });
+    }
+  }, [selectedRoom, currentUser?.user_id, setUsers]);
+
   // Firestore real-time listener for selectedRoom
   useEffect(() => {
     if (!selectedRoom) return;
 
-    // Listen to chatMessages (limit to latest 50 to protect free quota)
+    // Listen to chatMessages without orderBy to avoid composite index requirement
     const qMessages = query(
       collection(db, 'chatMessages'),
-      where('region', '==', selectedRoom),
-      orderBy('timestamp', 'desc'),
-      limit(50)
+      where('region', '==', selectedRoom)
     );
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
       if (snapshot.empty) {
         // Fallback to mock data for selectedRoom
         const defaultMsgs = messages.filter(msg => {
+          if (msg.region) {
+            return msg.region === selectedRoom;
+          }
           const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
           return msgUser?.region === selectedRoom;
         });
         setRoomMessages(defaultMsgs);
       } else {
-        const msgs: ChatMessage[] = [];
+        let msgs: ChatMessage[] = [];
         snapshot.forEach(doc => {
           msgs.push({ message_id: doc.id, ...doc.data() } as ChatMessage);
         });
         // Sort by timestamp asc (chronological display order)
         msgs.sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0));
+        // Take latest 50 messages
+        if (msgs.length > 50) {
+          msgs = msgs.slice(-50);
+        }
         setRoomMessages(msgs);
       }
     }, (err) => {
       console.warn("Firestore messages fetch failed, using fallback: ", err);
+      const defaultMsgs = messages.filter(msg => {
+        if (msg.region) {
+          return msg.region === selectedRoom;
+        }
+        const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
+        return msgUser?.region === selectedRoom;
+      });
+      setRoomMessages(defaultMsgs);
     });
 
     // Listen to marketItems
@@ -1241,14 +1275,6 @@ export const MainPage: React.FC = () => {
 
   const handleEnterRoom = (roomName: string) => {
     if (!currentUser) return;
-    
-    // Sync current user region in AppContext (automatically syncs neighbors' mock data region)
-    const updatedUser = {
-      ...currentUser,
-      region: roomName
-    };
-    setCurrentUser(updatedUser);
-    localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
     
     setSelectedRoom(roomName);
     
