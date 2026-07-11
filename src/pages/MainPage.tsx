@@ -944,9 +944,9 @@ export const MainPage: React.FC = () => {
     );
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
       if (snapshot.empty) {
-        // Fallback to mock data for selectedRoom only if currentUser is a test account or admin
-        const isTestOrAdmin = currentUser && (currentUser.user_id.startsWith('test_') || currentUser.role === 'admin');
-        if (isTestOrAdmin && currentUser) {
+        // Fallback to mock data for selectedRoom only if currentUser is a test account
+        const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
+        if (isTestUser && currentUser) {
           const defaultMsgs = messages.filter(msg => {
             if (msg.region) {
               return msg.region === selectedRoom;
@@ -982,8 +982,8 @@ export const MainPage: React.FC = () => {
       }
     }, (err) => {
       console.warn("Firestore messages fetch failed, using fallback: ", err);
-      const isTestOrAdmin = currentUser && (currentUser.user_id.startsWith('test_') || currentUser.role === 'admin');
-      if (isTestOrAdmin && currentUser) {
+      const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
+      if (isTestUser && currentUser) {
         const defaultMsgs = messages.filter(msg => {
           if (msg.region) {
             return msg.region === selectedRoom;
