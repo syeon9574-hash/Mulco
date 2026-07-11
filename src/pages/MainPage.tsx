@@ -944,15 +944,28 @@ export const MainPage: React.FC = () => {
     );
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
       if (snapshot.empty) {
-        // Fallback to mock data for selectedRoom
-        const defaultMsgs = messages.filter(msg => {
-          if (msg.region) {
-            return msg.region === selectedRoom;
-          }
-          const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
-          return msgUser?.region === selectedRoom;
-        });
-        setRoomMessages(defaultMsgs);
+        // Fallback to mock data for selectedRoom only if currentUser is a test/demo account
+        if (currentUser?.user_id.startsWith('test_')) {
+          const defaultMsgs = messages.filter(msg => {
+            if (msg.region) {
+              return msg.region === selectedRoom;
+            }
+            const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
+            return msgUser?.region === selectedRoom;
+          });
+          const mappedMsgs = defaultMsgs.map(msg => {
+            if (msg.user_id === 'u001') {
+              return {
+                ...msg,
+                user_id: currentUser.user_id
+              };
+            }
+            return msg;
+          });
+          setRoomMessages(mappedMsgs);
+        } else {
+          setRoomMessages([]);
+        }
       } else {
         let msgs: ChatMessage[] = [];
         snapshot.forEach(doc => {
@@ -968,14 +981,27 @@ export const MainPage: React.FC = () => {
       }
     }, (err) => {
       console.warn("Firestore messages fetch failed, using fallback: ", err);
-      const defaultMsgs = messages.filter(msg => {
-        if (msg.region) {
-          return msg.region === selectedRoom;
-        }
-        const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
-        return msgUser?.region === selectedRoom;
-      });
-      setRoomMessages(defaultMsgs);
+      if (currentUser?.user_id.startsWith('test_')) {
+        const defaultMsgs = messages.filter(msg => {
+          if (msg.region) {
+            return msg.region === selectedRoom;
+          }
+          const msgUser = users[msg.user_id] || (msg.user_id === currentUser?.user_id ? currentUser : null);
+          return msgUser?.region === selectedRoom;
+        });
+        const mappedMsgs = defaultMsgs.map(msg => {
+          if (msg.user_id === 'u001') {
+            return {
+              ...msg,
+              user_id: currentUser.user_id
+            };
+          }
+          return msg;
+        });
+        setRoomMessages(mappedMsgs);
+      } else {
+        setRoomMessages([]);
+      }
     });
 
     // Listen to marketItems
