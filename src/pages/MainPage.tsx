@@ -1458,16 +1458,17 @@ export const MainPage: React.FC = () => {
   const currentRoomHost = getRoomHost();
 
   const getRoomMemberCount = (roomName: string): number => {
-    // 1. 해당 방에 가입된 실제 유저 (Mock 유저 및 어드민 제외)
-    const realUsersInRoom = Object.values(users).filter(u => 
+    // 1. 해당 방에 가입된 실제 유저 (본인, Mock 유저 및 어드민 제외)
+    const otherUsersInRoom = Object.values(users).filter(u => 
       u.user_id &&
-      !u.user_id.startsWith('u00') && // mockData의 데모 유저 제외
-      u.role !== 'admin' &&           // 어드민 계정 제외
+      u.user_id !== currentUser?.user_id && // 본인 중복 방지
+      !u.user_id.startsWith('u00') &&       // mockData의 데모 유저 제외
+      u.role !== 'admin' &&                 // 어드민 계정 제외
       normalizeRegionToRoom(u.region) === roomName
     );
 
-    // 2. 어드민은 모든 방에 상시 상주하므로 무조건 기본 +1명부터 시작
-    return realUsersInRoom.length + 1;
+    // 2. 기본 1명(본인 혹은 최초 1인)에서 시작하여 실제 유저 추가마다 1명씩 누적
+    return otherUsersInRoom.length + 1;
   };
 
   const filteredMessages = roomMessages.filter(msg => {
