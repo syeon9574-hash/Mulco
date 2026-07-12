@@ -11,6 +11,7 @@ import { getCurrentTime, resizeAndCompressImage, normalizeRegionToRoom } from '.
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, onSnapshot, addDoc, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
 import { AdBanner } from '../components/common/AdBanner';
+import { mockChatMessages, mockBiologyItems, mockGoodsItems } from '../data/mockData';
 
 const Container = styled.div`
   display: flex;
@@ -970,8 +971,17 @@ export const MainPage: React.FC = () => {
       where('region', '==', selectedRoom)
     );
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
+      const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
       if (snapshot.empty) {
-        setRoomMessages([]);
+        // 테스트 계정: 목 대화 데이터로 폴백 (실제 유저는 빈 채팅방)
+        if (isTestUser) {
+          const mockMsgs = mockChatMessages.map(msg =>
+            msg.user_id === 'u001' ? { ...msg, user_id: currentUser!.user_id } : msg
+          );
+          setRoomMessages(mockMsgs);
+        } else {
+          setRoomMessages([]);
+        }
       } else {
         let msgs: ChatMessage[] = [];
         snapshot.forEach(doc => {
@@ -987,12 +997,21 @@ export const MainPage: React.FC = () => {
       }
     }, (err) => {
       console.warn("Firestore messages fetch failed: ", err);
-      setRoomMessages([]);
+      const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
+      if (isTestUser) {
+        const mockMsgs = mockChatMessages.map(msg =>
+          msg.user_id === 'u001' ? { ...msg, user_id: currentUser!.user_id } : msg
+        );
+        setRoomMessages(mockMsgs);
+      } else {
+        setRoomMessages([]);
+      }
     });
 
     // Listen to marketItems
     const qMarket = query(collection(db, 'marketItems'), where('region', '==', selectedRoom));
     const unsubMarket = onSnapshot(qMarket, (snapshot) => {
+      const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
       const bios: MarketItem[] = [];
       const goods: MarketItem[] = [];
       snapshot.forEach(doc => {
@@ -1006,10 +1025,25 @@ export const MainPage: React.FC = () => {
       // Sort by created_at desc (latest first)
       bios.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
       goods.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
-      setRoomBiologyItems(bios);
-      setRoomGoodsItems(goods);
+
+      // 테스트 계정이고 Firestore에 아이템이 없으면 목 데이터 사용
+      if (isTestUser && bios.length === 0) {
+        setRoomBiologyItems(mockBiologyItems);
+      } else {
+        setRoomBiologyItems(bios);
+      }
+      if (isTestUser && goods.length === 0) {
+        setRoomGoodsItems(mockGoodsItems);
+      } else {
+        setRoomGoodsItems(goods);
+      }
     }, (err) => {
       console.warn("Firestore marketItems fetch failed: ", err);
+      const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
+      if (isTestUser) {
+        setRoomBiologyItems(mockBiologyItems);
+        setRoomGoodsItems(mockGoodsItems);
+      }
     });
 
     return () => {

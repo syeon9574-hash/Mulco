@@ -152,9 +152,83 @@ export const mockChatMessages: ChatMessage[] = [
   },
 ];
 
-export const mockBiologyItems: MarketItem[] = [];
+export const mockBiologyItems: MarketItem[] = [
+  {
+    item_id: 'mock_bio_001',
+    user_id: 'u002',
+    category: 'BIOLOGY',
+    trade_type: 'GIVE',
+    title: '고정구피 치어 나눔해요 🐟',
+    price: 0,
+    emoji: '🐟',
+    description: '폭번으로 치어가 너무 많아서 나눔합니다! 건강한 아이들이에요.',
+    status: 'AVAILABLE',
+    created_at: '2026-07-10',
+  },
+  {
+    item_id: 'mock_bio_002',
+    user_id: 'u003',
+    category: 'BIOLOGY',
+    trade_type: 'GIVE',
+    title: '자바모스 나눔 (트리밍 여분) 🌿',
+    price: 0,
+    emoji: '🌿',
+    description: '수초 트리밍 후 남은 자바모스 주먹 분량 나눔해요. 직거래만 가능합니다.',
+    status: 'AVAILABLE',
+    created_at: '2026-07-09',
+  },
+  {
+    item_id: 'mock_bio_003',
+    user_id: 'u002',
+    category: 'BIOLOGY',
+    trade_type: 'TAKE',
+    title: '플래티 치어 분양 (책임비 500원)',
+    price: 500,
+    emoji: '🐠',
+    description: '플래티 치어 5마리 분양해요. 책임비 마리당 500원이고 직거래 선호합니다.',
+    status: 'AVAILABLE',
+    created_at: '2026-07-08',
+  },
+];
 
-export const mockGoodsItems: MarketItem[] = [];
+export const mockGoodsItems: MarketItem[] = [
+  {
+    item_id: 'mock_goods_001',
+    user_id: 'u005',
+    category: 'GOODS',
+    trade_type: 'GIVE',
+    title: '외부필터 나눔해요 (상태 양호)',
+    price: 0,
+    emoji: '⚙️',
+    description: '에헤임 2213 외부필터 창고에서 묵히던 거 나눔합니다. 직접 가져가실 분만요.',
+    status: 'AVAILABLE',
+    created_at: '2026-07-10',
+  },
+  {
+    item_id: 'mock_goods_002',
+    user_id: 'u005',
+    category: 'GOODS',
+    trade_type: 'TAKE',
+    title: '남은 어항용 자갈 소분 판매 (2kg)',
+    price: 2000,
+    emoji: '🪨',
+    description: '검정 세척 자갈 2kg 소분 판매해요. 세척 완료된 상태입니다.',
+    status: 'AVAILABLE',
+    created_at: '2026-07-09',
+  },
+  {
+    item_id: 'mock_goods_003',
+    user_id: 'u003',
+    category: 'GOODS',
+    trade_type: 'GIVE',
+    title: '수초 영양제 반통 나눔',
+    price: 0,
+    emoji: '💊',
+    description: '브라이티K 반 정도 남은 거 나눔해요. 유통기한 내년까지 남아있어요.',
+    status: 'AVAILABLE',
+    created_at: '2026-07-07',
+  },
+];
 
 export const reviewKeywords = [
   '🐟 생물이건강해요',
