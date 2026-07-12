@@ -965,20 +965,27 @@ export const MainPage: React.FC = () => {
   useEffect(() => {
     if (!selectedRoom) return;
 
-    // 실제 구글 유저 입장 시 시스템 메시지 전송 (테스트 계정 제외)
+    // 실제 구글 일반 유저 입장 시 시스템 메시지 전송 (테스트 계정·관리자 제외)
     const isRealUser = currentUser && !currentUser.user_id.startsWith('test_');
-    if (isRealUser && currentUser) {
-      const entryMsg = {
-        user_id: 'system',
-        type: 'system',
-        content: `${currentUser.nickname}님이 들어왔습니다.`,
-        time: getCurrentTime(),
-        timestamp: Date.now(),
-        region: selectedRoom,
-      };
-      addDoc(collection(db, 'chatMessages'), entryMsg).catch(err => {
-        console.warn('입장 메시지 전송 실패:', err);
-      });
+    const isAdmin = currentUser?.role === 'admin';
+    if (isRealUser && !isAdmin && currentUser) {
+      // 세션 내 이미 입장 메시지를 보낸 방은 중복 발송 방지
+      const sessionKey = `entry_${currentUser.user_id}_${selectedRoom}`;
+      const alreadySent = sessionStorage.getItem(sessionKey);
+      if (!alreadySent) {
+        sessionStorage.setItem(sessionKey, '1');
+        const entryMsg = {
+          user_id: 'system',
+          type: 'system',
+          content: `${currentUser.nickname}님이 들어왔습니다.`,
+          time: getCurrentTime(),
+          timestamp: Date.now(),
+          region: selectedRoom,
+        };
+        addDoc(collection(db, 'chatMessages'), entryMsg).catch(err => {
+          console.warn('입장 메시지 전송 실패:', err);
+        });
+      }
     }
 
     // Listen to chatMessages without orderBy to avoid composite index requirement
