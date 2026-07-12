@@ -47,12 +47,16 @@ const TabWrapper = styled.div`
   flex: 1;
   position: relative;
   overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 const TabContent = styled.div<{ active: boolean }>`
   display: ${props => (props.active ? 'flex' : 'none')};
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 `;
 
 const ChatContainer = styled.div`
@@ -96,6 +100,8 @@ const ChatInputBar = styled.div`
 
 const ChatInput = styled.input`
   flex: 1;
+  width: 100%;
+  min-width: 0;
   background-color: ${props => props.theme.colors.bg};
   border: 1px solid ${props => props.theme.colors.muted};
   border-radius: ${props => props.theme.borderRadius.md};

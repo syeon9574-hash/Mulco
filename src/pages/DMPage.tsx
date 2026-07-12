@@ -183,6 +183,8 @@ const ChatInputBar = styled.div`
 
 const ChatInput = styled.input`
   flex: 1;
+  width: 100%;
+  min-width: 0;
   background-color: ${props => props.theme.colors.white};
   border: 1.5px solid ${props => props.theme.colors.muted};
   border-radius: 9999px;
