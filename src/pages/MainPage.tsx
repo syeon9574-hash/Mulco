@@ -1458,17 +1458,16 @@ export const MainPage: React.FC = () => {
   const currentRoomHost = getRoomHost();
 
   const getRoomMemberCount = (roomName: string): number => {
-    // 1. popularRooms에서 기본 제공하는 count 값 매핑
-    const pop = popularRooms.find(r => r.name === roomName);
-    if (pop) return pop.count;
+    // 1. 해당 방에 가입된 실제 유저 (Mock 유저 및 어드민 제외)
+    const realUsersInRoom = Object.values(users).filter(u => 
+      u.user_id &&
+      !u.user_id.startsWith('u00') && // mockData의 데모 유저 제외
+      u.role !== 'admin' &&           // 어드민 계정 제외
+      normalizeRegionToRoom(u.region) === roomName
+    );
 
-    // 2. 그 외의 방은 이름 문자 기반의 고정 해시 값을 이용해 접속자 수가 요동치지 않고 안정적으로 보이도록 함
-    let hash = 0;
-    for (let i = 0; i < roomName.length; i++) {
-      hash = roomName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const baseCount = Math.abs(hash % 30) + 12; // 12명 ~ 41명 사이 고정 값
-    return baseCount;
+    // 2. 어드민은 모든 방에 상시 상주하므로 무조건 기본 +1명부터 시작
+    return realUsersInRoom.length + 1;
   };
 
   const filteredMessages = roomMessages.filter(msg => {
