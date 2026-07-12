@@ -965,6 +965,22 @@ export const MainPage: React.FC = () => {
   useEffect(() => {
     if (!selectedRoom) return;
 
+    // 실제 구글 유저 입장 시 시스템 메시지 전송 (테스트 계정 제외)
+    const isRealUser = currentUser && !currentUser.user_id.startsWith('test_');
+    if (isRealUser && currentUser) {
+      const entryMsg = {
+        user_id: 'system',
+        type: 'system',
+        content: `${currentUser.nickname}님이 들어왔습니다.`,
+        time: getCurrentTime(),
+        timestamp: Date.now(),
+        region: selectedRoom,
+      };
+      addDoc(collection(db, 'chatMessages'), entryMsg).catch(err => {
+        console.warn('입장 메시지 전송 실패:', err);
+      });
+    }
+
     // Listen to chatMessages without orderBy to avoid composite index requirement
     const qMessages = query(
       collection(db, 'chatMessages'),

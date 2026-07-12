@@ -148,7 +148,43 @@ const ReportBtn = styled.button`
   }
 `;
 
+const SystemNotice = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+  gap: 8px;
+`;
+
+const SystemNoticeLine = styled.div`
+  height: 1px;
+  flex: 1;
+  background: ${props => props.theme.colors.muted};
+  opacity: 0.7;
+`;
+
+const SystemNoticeText = styled.div`
+  font-size: 0.72rem;
+  color: ${props => props.theme.colors.textLight};
+  white-space: nowrap;
+  padding: 2px 10px;
+  background: ${props => props.theme.colors.white};
+  border-radius: 20px;
+  border: 1px solid ${props => props.theme.colors.muted};
+`;
+
 export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, sender, isMe, onAvatarClick, onDeleteClick, onReportClick, isHost }) => {
+  // system 타입 입장/퇴장 알림 메시지
+  if (message.type === 'system') {
+    return (
+      <SystemNotice>
+        <SystemNoticeLine />
+        <SystemNoticeText>{message.content}</SystemNoticeText>
+        <SystemNoticeLine />
+      </SystemNotice>
+    );
+  }
+
   const getAvatarBg = () => {
     if (!sender?.avatar) return undefined;
     const bgMap: Record<string, string> = {
