@@ -816,6 +816,25 @@ export const MainPage: React.FC = () => {
     blockedUsers,
     showToast 
   } = useApp();
+  const isDeveloper = currentUser?.email === 'syeon9574@gmail.com' || currentUser?.email?.startsWith('syeon9574');
+
+  const handleToggleDeveloperRole = () => {
+    if (!currentUser) return;
+    const nextRole: 'user' | 'admin' = currentUser.role === 'admin' ? 'user' : 'admin';
+    const updatedUser = {
+      ...currentUser,
+      role: nextRole
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('mulco_user', JSON.stringify(updatedUser));
+    
+    setUsers(prev => ({
+      ...prev,
+      [updatedUser.user_id]: updatedUser
+    }));
+
+    showToast(nextRole === 'admin' ? '🛠️ 최고 관리자 모드로 전환되었습니다.' : '🐠 일반 사용자 모드로 전환되었습니다.');
+  };
 
   const [selectedRoom, setSelectedRoom] = useState<string | null>(() => {
     return window.history.state?.room || null;
@@ -1483,6 +1502,19 @@ export const MainPage: React.FC = () => {
             )}
           </LobbyHeaderTitle>
           <LobbyHeaderActions>
+            {isDeveloper && currentUser && (
+              <>
+                <LobbyHeaderBtn onClick={handleToggleDeveloperRole} style={{ color: 'var(--point)', fontWeight: '800' }}>
+                  <span className="ms" style={{ fontSize: '18px', color: 'var(--point)' }}>
+                    {currentUser.role === 'admin' ? 'person' : 'shield_person'}
+                  </span>
+                  <ResponsiveText>
+                    {currentUser.role === 'admin' ? '일반 모드 전환' : '관리자 모드 전환'}
+                  </ResponsiveText>
+                </LobbyHeaderBtn>
+                <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>|</span>
+              </>
+            )}
             {currentUser?.role === 'admin' && (
               <>
                 <LobbyHeaderBtn onClick={() => navigate('/admin')} style={{ color: '#e74c3c', fontWeight: '800' }}>
@@ -1830,6 +1862,14 @@ export const MainPage: React.FC = () => {
         <MenuItem onClick={() => { setIsMenuOpen(false); navigate(`/profile/${currentUser?.user_id}`); }}>
           <span className="ms">person</span> 내 프로필 보기
         </MenuItem>
+        {isDeveloper && (
+          <MenuItem onClick={() => { setIsMenuOpen(false); handleToggleDeveloperRole(); }} style={{ borderColor: 'var(--point)', color: 'var(--point)' }}>
+            <span className="ms" style={{ color: 'var(--point)' }}>
+              {currentUser?.role === 'admin' ? 'person' : 'shield_person'}
+            </span>
+            {currentUser?.role === 'admin' ? '[개발자] 일반 모드로 전환' : '[개발자] 관리자 모드로 전환'}
+          </MenuItem>
+        )}
         <MenuItem onClick={() => { setIsMenuOpen(false); setIsSuggestionOpen(true); }}>
           <span className="ms">lightbulb</span> 건의사항 보내기
         </MenuItem>

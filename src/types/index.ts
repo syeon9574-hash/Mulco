@@ -12,6 +12,7 @@ export interface User {
   status?: 'ACTIVE' | 'BANNED';
   role?: 'user' | 'admin';
   fcmToken?: string;
+  email?: string;
 }
 
 export interface ChatRoom {
