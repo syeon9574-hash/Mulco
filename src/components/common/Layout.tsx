@@ -21,26 +21,26 @@ export const LayoutWrapper = styled.div`
 
 const FloatingDevToggle = styled.button<{ isAdmin: boolean }>`
   position: fixed;
-  top: 65px;
-  right: calc(50% - 240px); /* 500px layout width support */
-  z-index: 10000;
+  top: 12px;
+  right: calc(50% - 190px); /* 500px layout width support */
+  z-index: 10001;
   background: ${props => props.isAdmin ? 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)' : 'linear-gradient(135deg, #3A6073 0%, #2C3E50 100%)'};
   color: white;
   border: none;
   border-radius: 30px;
-  padding: 8px 14px;
-  font-size: 0.72rem;
+  padding: 6px 12px;
+  font-size: 0.7rem;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 5px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:hover {
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
   
   &:active {
@@ -48,11 +48,11 @@ const FloatingDevToggle = styled.button<{ isAdmin: boolean }>`
   }
 
   @media (max-width: 520px) {
-    right: 16px;
+    right: 56px;
   }
   
   .ms {
-    font-size: 14px;
+    font-size: 13px;
   }
 `;
 
