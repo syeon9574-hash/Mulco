@@ -971,29 +971,7 @@ export const MainPage: React.FC = () => {
     );
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
       if (snapshot.empty) {
-        // Fallback to mock data for selectedRoom only if currentUser is a test account
-        const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
-        if (isTestUser && currentUser) {
-          const defaultMsgs = messages.filter(msg => {
-            if (msg.region) {
-              return msg.region === selectedRoom;
-            }
-            const msgUser = users[msg.user_id] || (msg.user_id === currentUser.user_id ? currentUser : null);
-            return msgUser?.region === selectedRoom;
-          });
-          const mappedMsgs = defaultMsgs.map(msg => {
-            if (msg.user_id === 'u001') {
-              return {
-                ...msg,
-                user_id: currentUser.user_id
-              };
-            }
-            return msg;
-          });
-          setRoomMessages(mappedMsgs);
-        } else {
-          setRoomMessages([]);
-        }
+        setRoomMessages([]);
       } else {
         let msgs: ChatMessage[] = [];
         snapshot.forEach(doc => {
@@ -1008,29 +986,8 @@ export const MainPage: React.FC = () => {
         setRoomMessages(msgs);
       }
     }, (err) => {
-      console.warn("Firestore messages fetch failed, using fallback: ", err);
-      const isTestUser = currentUser && currentUser.user_id.startsWith('test_');
-      if (isTestUser && currentUser) {
-        const defaultMsgs = messages.filter(msg => {
-          if (msg.region) {
-            return msg.region === selectedRoom;
-          }
-          const msgUser = users[msg.user_id] || (msg.user_id === currentUser.user_id ? currentUser : null);
-          return msgUser?.region === selectedRoom;
-        });
-        const mappedMsgs = defaultMsgs.map(msg => {
-          if (msg.user_id === 'u001') {
-            return {
-              ...msg,
-              user_id: currentUser.user_id
-            };
-          }
-          return msg;
-        });
-        setRoomMessages(mappedMsgs);
-      } else {
-        setRoomMessages([]);
-      }
+      console.warn("Firestore messages fetch failed: ", err);
+      setRoomMessages([]);
     });
 
     // Listen to marketItems
@@ -1125,25 +1082,6 @@ export const MainPage: React.FC = () => {
       }
     });
 
-    // Simulate Reply (Only in test/demo mode)
-    if (currentUser.user_id.startsWith('test_')) {
-      setTimeout(() => {
-        const reply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
-        if (blockedUsers.includes(reply.user_id)) return; // Don't show from blocked users
-
-        const botMsg = {
-          user_id: reply.user_id,
-          type: 'other',
-          content: reply.content,
-          time: getCurrentTime(),
-          timestamp: Date.now(),
-          region: selectedRoom
-        };
-        addDoc(collection(db, 'chatMessages'), botMsg).catch(err => {
-          console.error("Failed to send mock reply: ", err);
-        });
-      }, 1200);
-    }
   };
 
   const handleDeleteMessage = (messageId: string) => {
