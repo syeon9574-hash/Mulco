@@ -8,6 +8,7 @@ const PageWrapper = styled.section`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   background-color: ${props => props.theme.colors.bg};
   overflow-y: auto;
 `;

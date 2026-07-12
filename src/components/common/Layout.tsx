@@ -21,7 +21,7 @@ export const LayoutWrapper = styled.div`
 
 const FloatingDevToggle = styled.button<{ isAdmin: boolean }>`
   position: fixed;
-  bottom: 80px;
+  top: 65px;
   right: calc(50% - 240px); /* 500px layout width support */
   z-index: 10000;
   background: ${props => props.isAdmin ? 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)' : 'linear-gradient(135deg, #3A6073 0%, #2C3E50 100%)'};
